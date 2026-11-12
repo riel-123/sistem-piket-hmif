@@ -1,0 +1,82 @@
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider  = "postgresql"
+  url       = env("DATABASE_URL")
+  directUrl = env("DIRECT_URL")
+}
+
+enum HariPiket {
+  Senin
+  Selasa
+  Rabu
+  Kamis
+  Jumat
+}
+
+enum StatusPresensi {
+  hadir
+  izin
+  alfa
+}
+
+enum StatusTukar {
+  pending
+  disetujui
+  ditolak
+}
+
+model User {
+  id            Int           @id @default(autoincrement())
+  nim           String        @unique
+  nama          String
+  divisi        String
+  role          String        @default("anggota")
+  password      String
+  jadwalPiket   JadwalPiket[]
+  presensi      Presensi[]
+  tukarKeluar   TukarJadwal[] @relation("PemohonTukar")
+  tukarMasuk    TukarJadwal[] @relation("TujuanTukar")
+  createdAt     DateTime      @default(now())
+}
+
+model JadwalPiket {
+  id     Int       @id @default(autoincrement())
+  userId Int
+  hari   HariPiket
+  user   User      @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@unique([userId, hari])
+}
+
+model Presensi {
+  id             Int            @id @default(autoincrement())
+  userId         Int
+  tanggal        String
+  waktuLapor     String
+  status         StatusPresensi
+  fotoSekre      String?
+  checklistTugas Json?
+  jenisIzin      String?
+  alasanIzin     String?
+  fotoBuktiIzin  String?
+  user           User           @relation(fields: [userId], references: [id], onDelete: Cascade)
+  createdAt      DateTime       @default(now())
+
+  @@unique([userId, tanggal])
+}
+
+model TukarJadwal {
+  id          Int         @id @default(autoincrement())
+  pemohonId   Int
+  tujuanId    Int
+  hariPemohon HariPiket
+  hariTujuan  HariPiket
+  alasan      String
+  status      StatusTukar @default(pending)
+  pemohon     User        @relation("PemohonTukar", fields: [pemohonId], references: [id], onDelete: Cascade)
+  tujuan      User        @relation("TujuanTukar", fields: [tujuanId], references: [id], onDelete: Cascade)
+  createdAt   DateTime    @default(now())
+}

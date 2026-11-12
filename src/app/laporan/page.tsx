@@ -20,6 +20,7 @@ import {
   Building2,
   Search,
   ArrowLeftRight,
+  UserPlus,
 } from "lucide-react";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
@@ -73,6 +74,17 @@ export default function LaporanPage() {
   // 3. State LAPORAN TUKAR JADWAL (Admin Monitoring)
   const [allTukarList, setAllTukarList] = useState<any[]>([]);
   const [searchTukarLog, setSearchTukarLog] = useState<string>("");
+
+  // 4. State MODAL TAMBAH ANGGOTA BARU
+  const [showAddUserModal, setShowAddUserModal] = useState(false);
+  const [newNim, setNewNim] = useState("");
+  const [newNama, setNewNama] = useState("");
+  const [newDivisi, setNewDivisi] = useState(DEPARTEMEN_HMIF[4]); // Default PSDMO
+  const [newPassword, setNewPassword] = useState("hmif2026");
+  const [newRole, setNewRole] = useState<"pengurus" | "admin">("pengurus");
+  const [newHari, setNewHari] = useState("Senin");
+  const [addingUser, setAddingUser] = useState(false);
+  const [addUserErr, setAddUserErr] = useState("");
 
   const [previewModal, setPreviewModal] = useState<any | null>(null);
   const [copiedType, setCopiedType] = useState<string | null>(null);
@@ -167,6 +179,43 @@ export default function LaporanPage() {
     if (!isAuthorized) return;
     fetchRekapKehadiran();
   }, [isAuthorized, rekapMode, rekapDate, rekapMonth]);
+
+  const handleTambahAnggota = async (e: React.FormEvent) => {
+    e.preventDefault();
+    if (!adminUser) return;
+    setAddUserErr("");
+    setAddingUser(true);
+
+    const res = await fetch("/api/user", {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({
+        adminId: adminUser.id,
+        nim: newNim,
+        nama: newNama,
+        divisi: newDivisi,
+        password: newPassword,
+        role: newRole,
+        hari: newHari,
+      }),
+    });
+    const resData = await res.json();
+    setAddingUser(false);
+
+    if (!res.ok) {
+      setAddUserErr(resData.error);
+    } else {
+      setShuffleMsg({ type: "ok", text: resData.message });
+      setNewNim("");
+      setNewNama("");
+      setNewPassword("hmif2026");
+      setNewRole("pengurus");
+      setShowAddUserModal(false);
+      loadJadwalStatus();
+      fetchDetailLogHarian();
+      fetchRekapKehadiran();
+    }
+  };
 
   const handleAcakJadwal = async () => {
     if (!adminUser || !canShuffle) return;
@@ -560,6 +609,17 @@ export default function LaporanPage() {
           </div>
 
           <div className="flex flex-wrap gap-2">
+            <button
+              type="button"
+              onClick={() => {
+                setAddUserErr("");
+                setShowAddUserModal(true);
+              }}
+              className="bg-amber-400 hover:bg-amber-300 text-slate-950 px-3.5 py-2.5 rounded-xl text-xs font-extrabold flex items-center gap-1.5 shadow-lg transition"
+            >
+              <UserPlus className="w-4 h-4" /> + Tambah Anggota
+            </button>
+
             <button
               onClick={copyRekapKehadiranExcel}
               className="bg-emerald-500 hover:bg-emerald-400 text-white px-3.5 py-2.5 rounded-xl text-xs font-bold flex items-center gap-1.5 shadow-lg shadow-emerald-900/20 transition"
@@ -1220,6 +1280,140 @@ export default function LaporanPage() {
             </table>
           </div>
         </div>
+
+        {/* ============================================================== */}
+        {/* MODAL TAMBAH ANGGOTA BARU                                      */}
+        {/* ============================================================== */}
+        {showAddUserModal && (
+          <div className="fixed inset-0 bg-slate-900/70 backdrop-blur-sm flex items-center justify-center p-4 z-50">
+            <form
+              onSubmit={handleTambahAnggota}
+              className="bg-white rounded-3xl max-w-md w-full p-6 space-y-4 shadow-2xl"
+            >
+              <div className="flex justify-between items-start gap-2">
+                <div>
+                  <span className="text-[11px] font-bold uppercase tracking-wider text-indigo-600">
+                    Manajemen Pengurus HMIF
+                  </span>
+                  <h3 className="font-extrabold text-lg text-slate-900">Tambah Anggota Baru</h3>
+                </div>
+                <button
+                  type="button"
+                  onClick={() => setShowAddUserModal(false)}
+                  className="w-8 h-8 rounded-full bg-slate-100 hover:bg-slate-200 flex items-center justify-center text-slate-600 font-bold"
+                >
+                  ✕
+                </button>
+              </div>
+
+              {addUserErr && (
+                <div className="bg-rose-50 border border-rose-200 text-rose-700 text-xs p-3 rounded-xl font-semibold">
+                  {addUserErr}
+                </div>
+              )}
+
+              <div className="space-y-3">
+                <div>
+                  <label className="text-xs font-bold text-slate-700 uppercase">NIM</label>
+                  <input
+                    type="text"
+                    required
+                    value={newNim}
+                    onChange={(e) => setNewNim(e.target.value)}
+                    placeholder="Contoh: 2350081099"
+                    className="w-full mt-1 border border-slate-200 focus:border-indigo-500 outline-none rounded-xl px-3.5 py-2.5 text-sm"
+                  />
+                </div>
+
+                <div>
+                  <label className="text-xs font-bold text-slate-700 uppercase">Nama Lengkap</label>
+                  <input
+                    type="text"
+                    required
+                    value={newNama}
+                    onChange={(e) => setNewNama(e.target.value)}
+                    placeholder="Nama lengkap pengurus"
+                    className="w-full mt-1 border border-slate-200 focus:border-indigo-500 outline-none rounded-xl px-3.5 py-2.5 text-sm"
+                  />
+                </div>
+
+                <div className="grid grid-cols-2 gap-3">
+                  <div>
+                    <label className="text-xs font-bold text-slate-700 uppercase">Departemen</label>
+                    <select
+                      value={newDivisi}
+                      onChange={(e) => setNewDivisi(e.target.value)}
+                      className="w-full mt-1 border border-slate-200 focus:border-indigo-500 outline-none rounded-xl px-3 py-2.5 text-xs font-semibold bg-white"
+                    >
+                      {DEPARTEMEN_HMIF.map((dept) => (
+                        <option key={dept} value={dept}>
+                          {dept}
+                        </option>
+                      ))}
+                    </select>
+                  </div>
+
+                  <div>
+                    <label className="text-xs font-bold text-slate-700 uppercase">Hari Piket</label>
+                    <select
+                      value={newHari}
+                      onChange={(e) => setNewHari(e.target.value)}
+                      className="w-full mt-1 border border-slate-200 focus:border-indigo-500 outline-none rounded-xl px-3 py-2.5 text-xs font-semibold bg-white"
+                    >
+                      {HARI_ORDER.map((hari) => (
+                        <option key={hari} value={hari}>
+                          {hari}
+                        </option>
+                      ))}
+                    </select>
+                  </div>
+                </div>
+
+                <div className="grid grid-cols-2 gap-3">
+                  <div>
+                    <label className="text-xs font-bold text-slate-700 uppercase">Password Awal</label>
+                    <input
+                      type="text"
+                      required
+                      value={newPassword}
+                      onChange={(e) => setNewPassword(e.target.value)}
+                      className="w-full mt-1 border border-slate-200 focus:border-indigo-500 outline-none rounded-xl px-3 py-2.5 text-xs font-mono"
+                    />
+                  </div>
+
+                  <div>
+                    <label className="text-xs font-bold text-slate-700 uppercase">Hak Akses</label>
+                    <select
+                      value={newRole}
+                      onChange={(e) => setNewRole(e.target.value as "pengurus" | "admin")}
+                      className="w-full mt-1 border border-slate-200 focus:border-indigo-500 outline-none rounded-xl px-3 py-2.5 text-xs font-semibold bg-white"
+                    >
+                      <option value="pengurus">Pengurus Biasa</option>
+                      <option value="admin">Admin</option>
+                    </select>
+                  </div>
+                </div>
+              </div>
+
+              <div className="flex gap-2 pt-2">
+                <button
+                  type="button"
+                  onClick={() => setShowAddUserModal(false)}
+                  className="flex-1 bg-slate-100 hover:bg-slate-200 text-slate-700 font-bold py-2.5 rounded-xl text-xs transition"
+                >
+                  Batal
+                </button>
+                <button
+                  type="submit"
+                  disabled={addingUser}
+                  className="flex-1 bg-indigo-600 hover:bg-indigo-700 disabled:bg-slate-300 text-white font-bold py-2.5 rounded-xl text-xs transition"
+                >
+                  {addingUser ? "Menyimpan..." : "Simpan Anggota"}
+                </button>
+              </div>
+            </form>
+          </div>
+        )}
 
         {/* Modal Preview Bukti Foto */}
         {previewModal && (

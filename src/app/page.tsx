@@ -44,6 +44,8 @@ const URUTAN_HARI: Record<string, number> = {
 };
 
 const DEPARTEMEN_HMIF = [
+  "Ketua",
+  "Wakil Ketua",
   "Sekretaris 1",
   "Sekretaris 2",
   "Bendahara 1",

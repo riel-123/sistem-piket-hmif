@@ -347,12 +347,12 @@ export default function HomePage() {
 
   if (!user) {
     return (
-      <div className="min-h-screen flex items-center justify-center bg-gradient-to-br from-slate-900 via-indigo-950 to-slate-900 p-4 relative overflow-hidden">
-        <div className="absolute -top-24 -left-24 w-80 h-80 bg-indigo-500/20 rounded-full blur-3xl pointer-events-none" />
-        <div className="absolute -bottom-24 -right-24 w-80 h-80 bg-violet-500/20 rounded-full blur-3xl pointer-events-none" />
+      <div className="min-h-screen flex items-center justify-center bg-gradient-to-br from-stone-900 via-orange-950 to-stone-900 p-4 relative overflow-hidden">
+        <div className="absolute -top-24 -left-24 w-80 h-80 bg-orange-600/20 rounded-full blur-3xl pointer-events-none" />
+        <div className="absolute -bottom-24 -right-24 w-80 h-80 bg-amber-600/20 rounded-full blur-3xl pointer-events-none" />
 
         <div className="w-full max-w-4xl grid lg:grid-cols-2 bg-white/95 backdrop-blur-xl rounded-3xl shadow-2xl overflow-hidden border border-white/20 z-10">
-          <div className="hidden lg:flex flex-col justify-between bg-gradient-to-br from-indigo-600 via-violet-600 to-blue-700 p-10 text-white">
+          <div className="hidden lg:flex flex-col justify-between bg-gradient-to-br from-orange-800 via-orange-700 to-amber-700 p-10 text-white">
             <div>
               <span className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full bg-white/15 text-xs font-semibold tracking-wide">
                 <Sparkles className="w-3.5 h-3.5" /> HMIF SEKRETARIAT
@@ -360,34 +360,38 @@ export default function HomePage() {
               <h2 className="text-3xl font-extrabold mt-6 leading-tight">
                 Sistem Monitoring & Absensi Piket Harian
               </h2>
-              <p className="text-indigo-100 text-sm mt-3 leading-relaxed">
+              <p className="text-orange-100/90 text-sm mt-3 leading-relaxed">
                 Jaga kenyamanan ruang sekretariat bersama. Lapor bukti kebersihan dengan watermark otomatis, cek jadwal departemen, atau tukar jadwal dengan rekan.
               </p>
             </div>
 
             <div className="space-y-3 bg-white/10 p-4 rounded-2xl border border-white/15 text-xs">
               <div className="flex items-center gap-2.5">
-                <CalendarDays className="w-4 h-4 text-indigo-200 shrink-0" />
-                <span>Jadwal Operasional: <strong>Senin – Jumat</strong></span>
+                <CalendarDays className="w-4 h-4 text-amber-200 shrink-0" />
+                <span>
+                  Jadwal Operasional: <strong>Senin – Jumat</strong>
+                </span>
               </div>
               <div className="flex items-center gap-2.5">
-                <Clock className="w-4 h-4 text-indigo-200 shrink-0" />
-                <span>Jam Lapor & Izin: <strong>07.00 – 17.00 WIB</strong></span>
+                <Clock className="w-4 h-4 text-amber-200 shrink-0" />
+                <span>
+                  Jam Lapor & Izin: <strong>07.00 – 17.00 WIB</strong>
+                </span>
               </div>
             </div>
           </div>
 
           <form onSubmit={handleLogin} className="p-7 sm:p-10 flex flex-col justify-center space-y-5">
             <div>
-              <div className="lg:hidden inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full bg-indigo-50 text-indigo-600 text-[11px] font-bold mb-3">
+              <div className="lg:hidden inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full bg-orange-50 text-orange-800 text-[11px] font-bold mb-3">
                 <Sparkles className="w-3 h-3" /> PIKET SEKRE HMIF
               </div>
-              <h1 className="text-2xl font-extrabold text-slate-900">Selamat Datang</h1>
-              <p className="text-sm text-slate-500 mt-1">Masuk dengan NIM dan password pengurus</p>
+              <h1 className="text-2xl font-extrabold text-stone-900">Selamat Datang</h1>
+              <p className="text-sm text-stone-500 mt-1">Masuk dengan NIM dan password pengurus</p>
             </div>
 
             {loginError && (
-              <div className="bg-rose-50 border border-rose-200 text-rose-600 text-xs p-3.5 rounded-xl flex items-center gap-2">
+              <div className="bg-rose-50 border border-rose-200 text-rose-700 text-xs p-3.5 rounded-xl flex items-center gap-2">
                 <AlertCircle className="w-4 h-4 shrink-0" />
                 <span>{loginError}</span>
               </div>
@@ -395,25 +399,29 @@ export default function HomePage() {
 
             <div className="space-y-4">
               <div>
-                <label className="text-xs font-bold text-slate-700 uppercase tracking-wider">NIM Pengurus</label>
+                <label className="text-xs font-bold text-stone-700 uppercase tracking-wider">
+                  NIM Pengurus
+                </label>
                 <input
                   type="text"
                   required
                   value={nim}
                   onChange={(e) => setNim(e.target.value)}
                   placeholder="Contoh: 2350081019"
-                  className="w-full mt-1.5 border border-slate-200 focus:border-indigo-500 focus:ring-4 focus:ring-indigo-500/10 outline-none rounded-xl px-4 py-3 text-sm text-slate-900 transition"
+                  className="w-full mt-1.5 border border-stone-200 focus:border-orange-700 focus:ring-4 focus:ring-orange-600/10 outline-none rounded-xl px-4 py-3 text-sm text-stone-900 transition"
                 />
               </div>
               <div>
-                <label className="text-xs font-bold text-slate-700 uppercase tracking-wider">Password</label>
+                <label className="text-xs font-bold text-stone-700 uppercase tracking-wider">
+                  Password
+                </label>
                 <input
                   type="password"
                   required
                   value={password}
                   onChange={(e) => setPassword(e.target.value)}
                   placeholder="••••••••"
-                  className="w-full mt-1.5 border border-slate-200 focus:border-indigo-500 focus:ring-4 focus:ring-indigo-500/10 outline-none rounded-xl px-4 py-3 text-sm text-slate-900 transition"
+                  className="w-full mt-1.5 border border-stone-200 focus:border-orange-700 focus:ring-4 focus:ring-orange-600/10 outline-none rounded-xl px-4 py-3 text-sm text-stone-900 transition"
                 />
               </div>
             </div>
@@ -421,7 +429,7 @@ export default function HomePage() {
             <button
               type="submit"
               disabled={loginLoading}
-              className="w-full bg-gradient-to-r from-indigo-600 to-violet-600 hover:from-indigo-700 hover:to-violet-700 text-white font-bold py-3.5 rounded-xl text-sm shadow-lg shadow-indigo-500/25 transition active:scale-[0.99]"
+              className="w-full bg-gradient-to-r from-orange-800 to-amber-700 hover:from-orange-900 hover:to-amber-800 text-white font-bold py-3.5 rounded-xl text-sm shadow-lg shadow-orange-900/20 transition active:scale-[0.99]"
             >
               {loginLoading ? "Memeriksa Akun..." : "Masuk ke Sistem"}
             </button>
@@ -434,28 +442,28 @@ export default function HomePage() {
   // PENGUNCI PENUH UNTUK PENGGUNA BIASA DI LUAR JAM 07.00 - 17.00 WIB
   if (timeReady && !isJamOperasional && !isAdmin) {
     return (
-      <div className="min-h-screen flex items-center justify-center bg-gradient-to-br from-slate-900 via-indigo-950 to-slate-900 p-4 text-slate-900">
+      <div className="min-h-screen flex items-center justify-center bg-gradient-to-br from-stone-900 via-orange-950 to-stone-900 p-4 text-stone-900">
         <div className="bg-white rounded-3xl max-w-md w-full p-8 text-center shadow-2xl space-y-5 border border-white/20">
-          <div className="w-16 h-16 rounded-2xl bg-gradient-to-br from-rose-500 to-orange-500 text-white flex items-center justify-center mx-auto shadow-lg shadow-rose-500/25">
+          <div className="w-16 h-16 rounded-2xl bg-gradient-to-br from-orange-700 to-amber-600 text-white flex items-center justify-center mx-auto shadow-lg shadow-orange-900/20">
             <Clock className="w-8 h-8" />
           </div>
           <div>
-            <span className="inline-block px-3 py-1 rounded-full bg-rose-50 text-rose-600 text-xs font-bold uppercase tracking-wider mb-2">
+            <span className="inline-block px-3 py-1 rounded-full bg-orange-50 text-orange-800 text-xs font-bold uppercase tracking-wider mb-2">
               Di Luar Jam Operasional
             </span>
-            <h1 className="text-xl sm:text-2xl font-extrabold text-slate-900">
+            <h1 className="text-xl sm:text-2xl font-extrabold text-stone-900">
               Sistem Piket Sedang Tutup
             </h1>
-            <p className="text-sm text-slate-500 mt-2 leading-relaxed">
+            <p className="text-sm text-stone-500 mt-2 leading-relaxed">
               Halo <strong>{user.nama}</strong>, akses sistem absensi piket hanya dibuka pada pukul{" "}
-              <strong className="text-slate-800">07.00 – 17.00 WIB</strong>. Sekarang pukul{" "}
-              <strong className="text-indigo-600">{jamSekarang} WIB</strong>.
+              <strong className="text-stone-800">07.00 – 17.00 WIB</strong>. Sekarang pukul{" "}
+              <strong className="text-orange-800">{jamSekarang} WIB</strong>.
             </p>
           </div>
           <div className="pt-2">
             <button
               onClick={handleLogout}
-              className="w-full bg-slate-900 hover:bg-slate-800 text-white font-bold py-3 rounded-xl text-sm flex items-center justify-center gap-2 transition"
+              className="w-full bg-stone-900 hover:bg-stone-800 text-white font-bold py-3 rounded-xl text-sm flex items-center justify-center gap-2 transition"
             >
               <LogOut className="w-4 h-4" /> Keluar Akun
             </button>
@@ -480,8 +488,7 @@ export default function HomePage() {
   const hariPiketSaya = user.jadwal?.[0] || "";
   const jadwalSayaSudahLewat = hariPiketSaya ? cekHariSudahLewat(hariPiketSaya) : false;
 
-  // Filter kandidat rekan untuk form tukar jadwal:
-  // Tidak boleh diri sendiri, tidak boleh hari yang sama, dan TIDAK BOLEH HARI SEBELUMNYA / SUDAH LEWAT
+  // Filter kandidat rekan untuk form tukar jadwal
   const kandidatTukarFiltered = allSchedules.filter((u) => {
     if (u.id === user.id || u.hari === "-" || u.hari === hariPiketSaya) return false;
     if (cekHariSudahLewat(u.hari)) return false;
@@ -496,7 +503,7 @@ export default function HomePage() {
     );
   });
 
-  // Filter Permintaan Tukar Masuk berdasarkan Nama, NIM, Departemen, atau Hari
+  // Filter Permintaan Tukar Masuk
   const filteredTukarMasuk = tukarMasuk.filter((item) => {
     const q = searchPermintaanTukar.trim().toLowerCase();
     if (!q) return true;
@@ -509,7 +516,7 @@ export default function HomePage() {
     );
   });
 
-  // Filter direktori seluruh pengurus berdasarkan Nama, NIM, Departemen, atau Hari
+  // Filter direktori seluruh pengurus
   const filteredDirektoriSchedules = allSchedules.filter((u) => {
     const q = searchDirektori.trim().toLowerCase();
     if (!q) return true;
@@ -526,20 +533,20 @@ export default function HomePage() {
   );
 
   return (
-    <div className="min-h-screen bg-slate-100/80 pb-14 text-slate-900">
+    <div className="min-h-screen bg-stone-100/90 pb-14 text-stone-900">
       {/* Top Navbar Glassmorphism */}
-      <header className="sticky top-0 z-30 bg-white/85 backdrop-blur-md border-b border-slate-200/80">
+      <header className="sticky top-0 z-30 bg-white/85 backdrop-blur-md border-b border-stone-200/80">
         <div className="max-w-6xl mx-auto px-4 sm:px-6 h-16 flex justify-between items-center">
           <div className="flex items-center gap-2.5">
-            <div className="w-9 h-9 rounded-xl bg-gradient-to-tr from-indigo-600 to-violet-600 flex items-center justify-center text-white font-extrabold shadow-sm">
+            <div className="w-9 h-9 rounded-xl bg-gradient-to-tr from-orange-800 to-amber-700 flex items-center justify-center text-white font-extrabold shadow-sm">
               P
             </div>
             <div>
-              <span className="font-extrabold text-slate-900 text-sm sm:text-base block leading-none">
+              <span className="font-extrabold text-stone-900 text-sm sm:text-base block leading-none">
                 Piket Sekre HMIF
               </span>
-              <span className="text-[11px] text-slate-500 font-medium">
-                {hariIni ? `${hariIni} • ${jamSekarang} WIB` : "Memuat waktu..."}
+              <span className="text-[11px] text-stone-500 font-medium">
+                {hariIni ? `${hariIni}, ${jamSekarang} WIB` : "Memuat waktu..."}
               </span>
             </div>
           </div>
@@ -548,7 +555,7 @@ export default function HomePage() {
             {isAdmin && (
               <Link
                 href="/laporan"
-                className="bg-indigo-600 hover:bg-indigo-700 text-white px-3.5 py-2 rounded-xl text-xs font-bold flex items-center gap-1.5 shadow-sm transition"
+                className="bg-orange-800 hover:bg-orange-900 text-white px-3.5 py-2 rounded-xl text-xs font-bold flex items-center gap-1.5 shadow-sm transition"
               >
                 <ClipboardList className="w-4 h-4" />
                 <span>Rekap & Panel Admin</span>
@@ -556,7 +563,7 @@ export default function HomePage() {
             )}
             <button
               onClick={handleLogout}
-              className="bg-slate-100 hover:bg-rose-50 text-slate-600 hover:text-rose-600 p-2.5 rounded-xl transition"
+              className="bg-stone-100 hover:bg-rose-50 text-stone-600 hover:text-rose-700 p-2.5 rounded-xl transition"
               title="Keluar"
             >
               <LogOut className="w-4 h-4" />
@@ -567,14 +574,14 @@ export default function HomePage() {
 
       <main className="max-w-6xl mx-auto px-4 sm:px-6 pt-6 sm:pt-8 space-y-6">
         {/* MENU NAVIGASI UTAMA: ABSENSI PIKET vs JADWAL & TUKAR */}
-        <div className="bg-white p-1.5 rounded-2xl border border-slate-200/80 shadow-sm grid grid-cols-2 max-w-lg mx-auto">
+        <div className="bg-white p-1.5 rounded-2xl border border-stone-200/90 shadow-sm grid grid-cols-2 max-w-lg mx-auto">
           <button
             type="button"
             onClick={() => setMainSection("absen")}
             className={`py-2.5 px-4 rounded-xl text-xs sm:text-sm font-extrabold flex items-center justify-center gap-2 transition ${
               mainSection === "absen"
-                ? "bg-gradient-to-r from-indigo-600 to-violet-600 text-white shadow-sm"
-                : "text-slate-600 hover:text-slate-900"
+                ? "bg-gradient-to-r from-orange-800 to-amber-700 text-white shadow-sm"
+                : "text-stone-600 hover:text-stone-900"
             }`}
           >
             <CheckSquare className="w-4 h-4" />
@@ -586,14 +593,14 @@ export default function HomePage() {
             onClick={() => setMainSection("jadwal")}
             className={`py-2.5 px-4 rounded-xl text-xs sm:text-sm font-extrabold flex items-center justify-center gap-2 transition relative ${
               mainSection === "jadwal"
-                ? "bg-gradient-to-r from-indigo-600 to-violet-600 text-white shadow-sm"
-                : "text-slate-600 hover:text-slate-900"
+                ? "bg-gradient-to-r from-orange-800 to-amber-700 text-white shadow-sm"
+                : "text-stone-600 hover:text-stone-900"
             }`}
           >
             <ArrowLeftRight className="w-4 h-4" />
             <span>Jadwal & Tukar</span>
             {pendingMasukCount > 0 && (
-              <span className="ml-1 px-1.5 py-0.5 text-[10px] font-black rounded-full bg-rose-500 text-white animate-pulse">
+              <span className="ml-1 px-1.5 py-0.5 text-[10px] font-black rounded-full bg-rose-600 text-white animate-pulse">
                 {pendingMasukCount}
               </span>
             )}
@@ -607,15 +614,17 @@ export default function HomePage() {
           <div className="grid grid-cols-1 lg:grid-cols-12 gap-6 items-start">
             {/* KOLOM KIRI: Kartu Profil, Persentase Kehadiran, & Jadwal */}
             <div className="lg:col-span-5 space-y-5">
-              <div className="bg-gradient-to-br from-indigo-600 via-violet-600 to-blue-700 rounded-3xl p-6 text-white shadow-xl shadow-indigo-500/15 relative overflow-hidden">
+              <div className="bg-gradient-to-br from-orange-800 via-orange-700 to-amber-700 rounded-3xl p-6 text-white shadow-xl shadow-orange-950/15 relative overflow-hidden">
                 <div className="absolute -right-8 -bottom-8 w-36 h-36 bg-white/10 rounded-full blur-2xl pointer-events-none" />
                 <div className="flex items-start justify-between gap-3">
                   <div>
                     <span className="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full bg-white/15 text-[11px] font-bold uppercase tracking-wider">
                       <ShieldCheck className="w-3.5 h-3.5" /> {user.divisi}
                     </span>
-                    <h1 className="text-xl sm:text-2xl font-extrabold mt-3 leading-snug">{user.nama}</h1>
-                    <p className="text-indigo-200 text-xs font-mono mt-0.5">NIM: {user.nim}</p>
+                    <h1 className="text-xl sm:text-2xl font-extrabold mt-3 leading-snug">
+                      {user.nama}
+                    </h1>
+                    <p className="text-orange-100/90 text-xs font-mono mt-0.5">NIM: {user.nim}</p>
                   </div>
                   <div className="w-12 h-12 rounded-2xl bg-white/15 backdrop-blur-sm flex items-center justify-center text-lg font-black shrink-0 border border-white/20">
                     {user.nama?.charAt(0)}
@@ -623,7 +632,9 @@ export default function HomePage() {
                 </div>
 
                 <div className="mt-6 pt-5 border-t border-white/15">
-                  <p className="text-xs text-indigo-100 font-semibold mb-2.5">Jadwal Piket Minggu Ini:</p>
+                  <p className="text-xs text-orange-100 font-semibold mb-2.5">
+                    Jadwal Piket Minggu Ini:
+                  </p>
                   <div className="grid grid-cols-5 gap-1.5">
                     {HARI_KERJA.map((hari) => {
                       const isMyDay = user.jadwal?.includes(hari);
@@ -633,9 +644,9 @@ export default function HomePage() {
                           key={hari}
                           className={`py-2 px-1 rounded-xl text-center border transition ${
                             isMyDay
-                              ? "bg-white text-indigo-700 border-white font-extrabold shadow-sm"
-                              : "bg-white/10 text-indigo-200 border-white/10 font-medium"
-                          } ${isToday ? "ring-2 ring-amber-300" : ""}`}
+                              ? "bg-white text-orange-900 border-white font-extrabold shadow-sm"
+                              : "bg-white/10 text-orange-100/85 border-white/10 font-medium"
+                          } ${isToday ? "ring-2 ring-amber-200" : ""}`}
                         >
                           <span className="text-[11px] block">{hari.slice(0, 3)}</span>
                           <span className="text-[9px] block mt-0.5 opacity-80">
@@ -649,30 +660,30 @@ export default function HomePage() {
               </div>
 
               {/* KARTU PERSENTASE KEHADIRAN BULAN INI */}
-              <div className="bg-white rounded-2xl border border-slate-200/80 shadow-sm p-5 space-y-3.5">
+              <div className="bg-white rounded-2xl border border-stone-200/90 shadow-sm p-5 space-y-3.5">
                 <div className="flex items-center justify-between">
                   <div className="flex items-center gap-2">
-                    <div className="w-8 h-8 rounded-lg bg-emerald-50 text-emerald-600 flex items-center justify-center">
+                    <div className="w-8 h-8 rounded-lg bg-emerald-50 text-emerald-700 flex items-center justify-center">
                       <TrendingUp className="w-4 h-4" />
                     </div>
                     <div>
-                      <h3 className="text-xs font-extrabold text-slate-800 uppercase tracking-wider">
+                      <h3 className="text-xs font-extrabold text-stone-800 uppercase tracking-wider">
                         Persentase Kehadiranmu
                       </h3>
-                      <p className="text-[11px] text-slate-400">Rekap performa piket bulan ini</p>
+                      <p className="text-[11px] text-stone-400">Rekap performa piket bulan ini</p>
                     </div>
                   </div>
-                  <span className="text-xl font-black text-indigo-600">{stats.persentase}%</span>
+                  <span className="text-xl font-black text-orange-800">{stats.persentase}%</span>
                 </div>
 
-                <div className="w-full h-2.5 bg-slate-100 rounded-full overflow-hidden">
+                <div className="w-full h-2.5 bg-stone-100 rounded-full overflow-hidden">
                   <div
                     className={`h-full transition-all duration-500 ${
                       stats.persentase >= 80
-                        ? "bg-emerald-500"
+                        ? "bg-emerald-600"
                         : stats.persentase >= 50
-                        ? "bg-amber-500"
-                        : "bg-rose-500"
+                        ? "bg-amber-600"
+                        : "bg-rose-600"
                     }`}
                     style={{ width: `${stats.persentase}%` }}
                   />
@@ -680,35 +691,41 @@ export default function HomePage() {
 
                 <div className="grid grid-cols-3 gap-2 pt-1 text-center">
                   <div className="bg-emerald-50/70 rounded-xl p-2 border border-emerald-100">
-                    <span className="text-sm font-extrabold text-emerald-700 block">{stats.hadir}</span>
-                    <span className="text-[10px] font-semibold text-emerald-600">Hadir</span>
+                    <span className="text-sm font-extrabold text-emerald-800 block">
+                      {stats.hadir}
+                    </span>
+                    <span className="text-[10px] font-semibold text-emerald-700">Hadir</span>
                   </div>
                   <div className="bg-amber-50/70 rounded-xl p-2 border border-amber-100">
-                    <span className="text-sm font-extrabold text-amber-700 block">{stats.izin}</span>
-                    <span className="text-[10px] font-semibold text-amber-600">Izin</span>
+                    <span className="text-sm font-extrabold text-amber-800 block">
+                      {stats.izin}
+                    </span>
+                    <span className="text-[10px] font-semibold text-amber-700">Izin</span>
                   </div>
                   <div className="bg-rose-50/70 rounded-xl p-2 border border-rose-100">
-                    <span className="text-sm font-extrabold text-rose-700 block">{stats.alfa}</span>
-                    <span className="text-[10px] font-semibold text-rose-600">Alfa</span>
+                    <span className="text-sm font-extrabold text-rose-800 block">
+                      {stats.alfa}
+                    </span>
+                    <span className="text-[10px] font-semibold text-rose-700">Alfa</span>
                   </div>
                 </div>
               </div>
 
               {/* Banner Notifikasi Jika Ada Permintaan Tukar Jadwal Masuk */}
               {pendingMasukCount > 0 && (
-                <div className="bg-violet-50 border border-violet-200 rounded-2xl p-4 flex items-center justify-between gap-3">
+                <div className="bg-orange-50 border border-orange-200 rounded-2xl p-4 flex items-center justify-between gap-3">
                   <div>
-                    <p className="text-xs font-extrabold text-violet-900">
+                    <p className="text-xs font-extrabold text-orange-950">
                       Ada {pendingMasukCount} Permintaan Tukar Jadwal!
                     </p>
-                    <p className="text-[11px] text-violet-700 mt-0.5">
+                    <p className="text-[11px] text-orange-800 mt-0.5">
                       Rekan pengurus meminta konfirmasi tukar hari piket denganmu.
                     </p>
                   </div>
                   <button
                     type="button"
                     onClick={() => setMainSection("jadwal")}
-                    className="bg-violet-600 hover:bg-violet-700 text-white px-3.5 py-2 rounded-xl text-xs font-bold shrink-0 transition"
+                    className="bg-orange-800 hover:bg-orange-900 text-white px-3.5 py-2 rounded-xl text-xs font-bold shrink-0 transition"
                   >
                     Cek Sekarang
                   </button>
@@ -719,13 +736,13 @@ export default function HomePage() {
                 <div
                   className={`p-4 rounded-2xl border flex items-start gap-3 shadow-sm ${
                     bisaIsiAbsen
-                      ? "bg-emerald-50/90 border-emerald-200 text-emerald-900"
-                      : "bg-amber-50/90 border-amber-200 text-amber-900"
+                      ? "bg-emerald-50/90 border-emerald-200 text-emerald-950"
+                      : "bg-amber-50/90 border-amber-200 text-amber-950"
                   }`}
                 >
                   <div
                     className={`p-2 rounded-xl shrink-0 ${
-                      bisaIsiAbsen ? "bg-emerald-500 text-white" : "bg-amber-500 text-white"
+                      bisaIsiAbsen ? "bg-emerald-700 text-white" : "bg-amber-700 text-white"
                     }`}
                   >
                     {bisaIsiAbsen ? <UserCheck className="w-5 h-5" /> : <Lock className="w-5 h-5" />}
@@ -748,15 +765,15 @@ export default function HomePage() {
 
             {/* KOLOM KANAN: Form Lapor Piket / Ajukan Izin */}
             <div className="lg:col-span-7 space-y-4">
-              <div className="grid grid-cols-2 bg-slate-200/80 p-1.5 rounded-2xl border border-slate-200">
+              <div className="grid grid-cols-2 bg-stone-200/80 p-1.5 rounded-2xl border border-stone-200">
                 <button
                   type="button"
                   disabled={!bisaIsiAbsen}
                   onClick={() => setActiveTab("hadir")}
                   className={`py-2.5 rounded-xl text-sm font-bold flex items-center justify-center gap-2 transition disabled:cursor-not-allowed ${
                     activeTab === "hadir"
-                      ? "bg-white text-indigo-600 shadow-sm"
-                      : "text-slate-600 hover:text-slate-900"
+                      ? "bg-white text-orange-800 shadow-sm"
+                      : "text-stone-600 hover:text-stone-900"
                   }`}
                 >
                   <CheckSquare className="w-4 h-4" /> Lapor Piket
@@ -767,8 +784,8 @@ export default function HomePage() {
                   onClick={() => setActiveTab("izin")}
                   className={`py-2.5 rounded-xl text-sm font-bold flex items-center justify-center gap-2 transition disabled:cursor-not-allowed ${
                     activeTab === "izin"
-                      ? "bg-white text-amber-600 shadow-sm"
-                      : "text-slate-600 hover:text-slate-900"
+                      ? "bg-white text-amber-700 shadow-sm"
+                      : "text-stone-600 hover:text-stone-900"
                   }`}
                 >
                   <FileText className="w-4 h-4" /> Ajukan Izin
@@ -784,9 +801,9 @@ export default function HomePage() {
                   }`}
                 >
                   {message.type === "ok" ? (
-                    <CheckCircle2 className="w-5 h-5 text-emerald-600 shrink-0" />
+                    <CheckCircle2 className="w-5 h-5 text-emerald-700 shrink-0" />
                   ) : (
-                    <AlertCircle className="w-5 h-5 text-rose-600 shrink-0" />
+                    <AlertCircle className="w-5 h-5 text-rose-700 shrink-0" />
                   )}
                   <span>{message.text}</span>
                 </div>
@@ -795,13 +812,13 @@ export default function HomePage() {
               <div className="relative">
                 {timeReady && !bisaIsiAbsen && (
                   <div className="absolute inset-0 z-20 bg-white/80 backdrop-blur-[3px] rounded-3xl border-2 border-dashed border-amber-300 flex flex-col items-center justify-center p-6 sm:p-10 text-center">
-                    <div className="w-16 h-16 rounded-2xl bg-gradient-to-br from-amber-400 to-orange-500 text-white flex items-center justify-center mb-4 shadow-lg shadow-amber-500/25">
+                    <div className="w-16 h-16 rounded-2xl bg-gradient-to-br from-orange-700 to-amber-600 text-white flex items-center justify-center mb-4 shadow-lg shadow-orange-900/20">
                       <Lock className="w-8 h-8" />
                     </div>
-                    <h3 className="font-extrabold text-slate-900 text-lg sm:text-xl max-w-sm">
+                    <h3 className="font-extrabold text-stone-900 text-lg sm:text-xl max-w-sm">
                       {alasanTerkunci.judul}
                     </h3>
-                    <p className="text-xs sm:text-sm text-slate-500 mt-2 max-w-md leading-relaxed">
+                    <p className="text-xs sm:text-sm text-stone-500 mt-2 max-w-md leading-relaxed">
                       {alasanTerkunci.deskripsi}
                     </p>
                   </div>
@@ -809,23 +826,23 @@ export default function HomePage() {
 
                 <form
                   onSubmit={handleSubmit}
-                  className="bg-white p-6 sm:p-8 rounded-3xl border border-slate-200/80 shadow-sm"
+                  className="bg-white p-6 sm:p-8 rounded-3xl border border-stone-200/90 shadow-sm"
                 >
                   <fieldset disabled={!bisaIsiAbsen} className="space-y-6 disabled:opacity-50">
                     {activeTab === "hadir" ? (
                       <>
                         <div>
                           <div className="flex justify-between items-center mb-2">
-                            <label className="text-sm font-extrabold text-slate-800">
+                            <label className="text-sm font-extrabold text-stone-800">
                               1. Checklist Kebersihan Sekre
                             </label>
-                            <span className="text-xs font-bold text-indigo-600 bg-indigo-50 px-2.5 py-0.5 rounded-full">
+                            <span className="text-xs font-bold text-orange-800 bg-orange-50 px-2.5 py-0.5 rounded-full">
                               {checklist.length}/{TUGAS_PIKET.length} Selesai ({progressPersen}%)
                             </span>
                           </div>
-                          <div className="w-full h-2 bg-slate-100 rounded-full overflow-hidden mb-3.5">
+                          <div className="w-full h-2 bg-stone-100 rounded-full overflow-hidden mb-3.5">
                             <div
-                              className="h-full bg-gradient-to-r from-indigo-500 to-violet-500 transition-all duration-300"
+                              className="h-full bg-gradient-to-r from-orange-700 to-amber-600 transition-all duration-300"
                               style={{ width: `${progressPersen}%` }}
                             />
                           </div>
@@ -838,15 +855,15 @@ export default function HomePage() {
                                   key={item}
                                   className={`flex items-start gap-3 p-3.5 rounded-2xl border text-xs sm:text-sm cursor-pointer transition ${
                                     checked
-                                      ? "bg-indigo-50/70 border-indigo-300 text-indigo-950 font-semibold"
-                                      : "bg-slate-50/50 border-slate-200 text-slate-700 hover:bg-slate-50"
+                                      ? "bg-orange-50/75 border-orange-300 text-orange-950 font-semibold"
+                                      : "bg-stone-50/60 border-stone-200 text-stone-700 hover:bg-stone-50"
                                   }`}
                                 >
                                   <input
                                     type="checkbox"
                                     checked={checked}
                                     onChange={() => toggleTugas(item)}
-                                    className="mt-0.5 w-4 h-4 rounded text-indigo-600 accent-indigo-600 shrink-0"
+                                    className="mt-0.5 w-4 h-4 rounded text-orange-700 accent-orange-700 shrink-0"
                                   />
                                   <span className="leading-snug">{item}</span>
                                 </label>
@@ -856,7 +873,7 @@ export default function HomePage() {
                         </div>
 
                         <div>
-                          <label className="text-sm font-extrabold text-slate-800 block mb-2.5">
+                          <label className="text-sm font-extrabold text-stone-800 block mb-2.5">
                             2. Foto Bukti Sekre Rapi (Live Kamera)
                           </label>
                           <CameraWatermark
@@ -868,13 +885,13 @@ export default function HomePage() {
                     ) : (
                       <div className="space-y-4">
                         <div>
-                          <label className="text-xs font-bold text-slate-700 uppercase tracking-wider">
+                          <label className="text-xs font-bold text-stone-700 uppercase tracking-wider">
                             Kategori Izin
                           </label>
                           <select
                             value={jenisIzin}
                             onChange={(e) => setJenisIzin(e.target.value)}
-                            className="w-full mt-1.5 border border-slate-200 focus:border-amber-500 outline-none rounded-xl px-4 py-3 text-sm bg-white"
+                            className="w-full mt-1.5 border border-stone-200 focus:border-amber-600 outline-none rounded-xl px-4 py-3 text-sm bg-white"
                           >
                             <option value="Sakit">Sakit</option>
                             <option value="Akademik/Lomba">Keperluan Kuliah / Lomba</option>
@@ -884,7 +901,7 @@ export default function HomePage() {
                         </div>
 
                         <div>
-                          <label className="text-xs font-bold text-slate-700 uppercase tracking-wider">
+                          <label className="text-xs font-bold text-stone-700 uppercase tracking-wider">
                             Alasan Singkat
                           </label>
                           <textarea
@@ -893,12 +910,12 @@ export default function HomePage() {
                             value={alasanIzin}
                             onChange={(e) => setAlasanIzin(e.target.value)}
                             placeholder="Jelaskan alasan tidak bisa hadir piket..."
-                            className="w-full mt-1.5 border border-slate-200 focus:border-amber-500 outline-none rounded-xl px-4 py-3 text-sm"
+                            className="w-full mt-1.5 border border-stone-200 focus:border-amber-600 outline-none rounded-xl px-4 py-3 text-sm"
                           />
                         </div>
 
                         <div>
-                          <label className="text-xs font-bold text-slate-700 uppercase tracking-wider block mb-1.5">
+                          <label className="text-xs font-bold text-stone-700 uppercase tracking-wider block mb-1.5">
                             Foto Bukti Pendukung (Wajib)
                           </label>
                           <input
@@ -906,9 +923,9 @@ export default function HomePage() {
                             accept="image/*"
                             required
                             onChange={(e) => setFotoIzin(e.target.files?.[0] || null)}
-                            className="w-full text-sm border border-slate-200 rounded-xl p-2.5 file:mr-3 file:py-2 file:px-4 file:rounded-lg file:border-0 file:bg-amber-100 file:text-amber-800 file:font-bold hover:file:bg-amber-200 transition"
+                            className="w-full text-sm border border-stone-200 rounded-xl p-2.5 file:mr-3 file:py-2 file:px-4 file:rounded-lg file:border-0 file:bg-amber-100 file:text-amber-900 file:font-bold hover:file:bg-amber-200 transition"
                           />
-                          <p className="text-[11px] text-slate-400 mt-1.5">
+                          <p className="text-[11px] text-stone-400 mt-1.5">
                             Unggah foto surat dokter, jadwal kuliah pengganti, atau bukti pendukung lainnya.
                           </p>
                         </div>
@@ -918,10 +935,10 @@ export default function HomePage() {
                     <button
                       type="submit"
                       disabled={loading || !bisaIsiAbsen}
-                      className={`w-full text-white font-bold py-3.5 rounded-2xl text-sm flex items-center justify-center gap-2 shadow-lg transition active:scale-[0.99] disabled:bg-slate-400 disabled:shadow-none ${
+                      className={`w-full text-white font-bold py-3.5 rounded-2xl text-sm flex items-center justify-center gap-2 shadow-lg transition active:scale-[0.99] disabled:bg-stone-400 disabled:shadow-none ${
                         activeTab === "hadir"
-                          ? "bg-gradient-to-r from-indigo-600 to-violet-600 hover:from-indigo-700 hover:to-violet-700 shadow-indigo-500/25"
-                          : "bg-gradient-to-r from-amber-500 to-orange-500 hover:from-amber-600 hover:to-orange-600 shadow-amber-500/25"
+                          ? "bg-gradient-to-r from-orange-800 to-amber-700 hover:from-orange-900 hover:to-amber-800 shadow-orange-900/20"
+                          : "bg-gradient-to-r from-amber-700 to-orange-700 hover:from-amber-800 hover:to-orange-800 shadow-amber-900/20"
                       }`}
                     >
                       <Send className="w-4 h-4" />
@@ -952,9 +969,9 @@ export default function HomePage() {
                 }`}
               >
                 {tukarFeedback.type === "ok" ? (
-                  <CheckCircle2 className="w-5 h-5 text-emerald-600 shrink-0" />
+                  <CheckCircle2 className="w-5 h-5 text-emerald-700 shrink-0" />
                 ) : (
-                  <AlertCircle className="w-5 h-5 text-rose-600 shrink-0" />
+                  <AlertCircle className="w-5 h-5 text-rose-700 shrink-0" />
                 )}
                 <span>{tukarFeedback.text}</span>
               </div>
@@ -963,11 +980,11 @@ export default function HomePage() {
             <div className="grid grid-cols-1 lg:grid-cols-12 gap-6 items-start">
               {/* Kotak Pengajuan Masuk & Riwayat Pengajuan Keluar (7 Kolom) */}
               <div className="lg:col-span-7 space-y-5">
-                <div className="bg-white rounded-3xl border border-slate-200/80 shadow-sm p-6 space-y-4">
+                <div className="bg-white rounded-3xl border border-stone-200/90 shadow-sm p-6 space-y-4">
                   <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-2.5">
                     <div>
                       <div className="flex items-center gap-2">
-                        <h2 className="text-base sm:text-lg font-extrabold text-slate-900">
+                        <h2 className="text-base sm:text-lg font-extrabold text-stone-900">
                           Permintaan Tukar Jadwal Masuk
                         </h2>
                         {pendingMasukCount > 0 && (
@@ -976,27 +993,27 @@ export default function HomePage() {
                           </span>
                         )}
                       </div>
-                      <p className="text-xs text-slate-500">
+                      <p className="text-xs text-stone-500">
                         Konfirmasi jika kamu bersedia bertukar hari piket dengan rekan pengurus
                       </p>
                     </div>
 
                     {tukarMasuk.length > 0 && (
                       <div className="relative">
-                        <Search className="w-3.5 h-3.5 text-slate-400 absolute left-3 top-1/2 -translate-y-1/2" />
+                        <Search className="w-3.5 h-3.5 text-stone-400 absolute left-3 top-1/2 -translate-y-1/2" />
                         <input
                           type="text"
                           value={searchPermintaanTukar}
                           onChange={(e) => setSearchPermintaanTukar(e.target.value)}
                           placeholder="Cari nama / NIM / hari..."
-                          className="w-full sm:w-48 border border-slate-200 focus:border-indigo-500 outline-none rounded-xl pl-8 pr-3 py-1.5 text-xs bg-slate-50"
+                          className="w-full sm:w-48 border border-stone-200 focus:border-orange-700 outline-none rounded-xl pl-8 pr-3 py-1.5 text-xs bg-stone-50"
                         />
                       </div>
                     )}
                   </div>
 
                   {filteredTukarMasuk.length === 0 ? (
-                    <div className="p-6 rounded-2xl bg-slate-50 border border-dashed border-slate-200 text-center text-xs text-slate-400">
+                    <div className="p-6 rounded-2xl bg-stone-50 border border-dashed border-stone-200 text-center text-xs text-stone-400">
                       {tukarMasuk.length === 0
                         ? "Belum ada pengajuan tukar jadwal yang masuk kepadamu."
                         : "Tidak ada permintaan tukar yang cocok dengan pencarian."}
@@ -1008,26 +1025,26 @@ export default function HomePage() {
                           key={item.id}
                           className={`p-4 rounded-2xl border transition ${
                             item.status === "pending"
-                              ? "bg-violet-50/60 border-violet-200"
-                              : "bg-slate-50 border-slate-200/70"
+                              ? "bg-orange-50/70 border-orange-200"
+                              : "bg-stone-50 border-stone-200/70"
                           }`}
                         >
                           <div className="flex flex-wrap justify-between items-start gap-2">
                             <div>
-                              <p className="font-extrabold text-sm text-slate-900">
+                              <p className="font-extrabold text-sm text-stone-900">
                                 {item.pemohon.nama}{" "}
-                                <span className="text-xs font-mono font-normal text-slate-500">
+                                <span className="text-xs font-mono font-normal text-stone-500">
                                   ({item.pemohon.nim})
                                 </span>{" "}
-                                <span className="text-xs font-semibold text-indigo-600">
+                                <span className="text-xs font-semibold text-orange-800">
                                   • {item.pemohon.divisi}
                                 </span>
                               </p>
-                              <p className="text-xs text-slate-600 mt-1">
+                              <p className="text-xs text-stone-600 mt-1">
                                 Mengajak tukar: Hari{" "}
-                                <strong className="text-indigo-700">{item.hariPemohon}</strong>{" "}
+                                <strong className="text-orange-800">{item.hariPemohon}</strong>{" "}
                                 (miliknya) ↔ Hari{" "}
-                                <strong className="text-violet-700">{item.hariTujuan}</strong>{" "}
+                                <strong className="text-amber-800">{item.hariTujuan}</strong>{" "}
                                 (milikmu)
                               </p>
                             </div>
@@ -1037,15 +1054,15 @@ export default function HomePage() {
                                 item.status === "pending"
                                   ? "bg-amber-100 text-amber-800"
                                   : item.status === "disetujui"
-                                  ? "bg-emerald-100 text-emerald-700"
-                                  : "bg-rose-100 text-rose-700"
+                                  ? "bg-emerald-100 text-emerald-800"
+                                  : "bg-rose-100 text-rose-800"
                               }`}
                             >
                               {item.status}
                             </span>
                           </div>
 
-                          <p className="text-xs bg-white p-2.5 rounded-xl border border-slate-200/70 text-slate-600 mt-2.5">
+                          <p className="text-xs bg-white p-2.5 rounded-xl border border-stone-200/70 text-stone-600 mt-2.5">
                             <strong>Alasan:</strong> “{item.alasan}”
                           </p>
 
@@ -1054,14 +1071,14 @@ export default function HomePage() {
                               <button
                                 type="button"
                                 onClick={() => handleKonfirmasiTukar(item.id, "setuju")}
-                                className="flex-1 bg-emerald-600 hover:bg-emerald-700 text-white font-bold py-2.5 rounded-xl text-xs flex items-center justify-center gap-1.5 shadow-sm transition"
+                                className="flex-1 bg-emerald-700 hover:bg-emerald-600 text-white font-bold py-2.5 rounded-xl text-xs flex items-center justify-center gap-1.5 shadow-sm transition"
                               >
                                 <Check className="w-4 h-4" /> Setuju & Tukar Otomatis
                               </button>
                               <button
                                 type="button"
                                 onClick={() => handleKonfirmasiTukar(item.id, "tolak")}
-                                className="flex-1 bg-white hover:bg-rose-50 text-rose-600 border border-rose-200 font-bold py-2.5 rounded-xl text-xs flex items-center justify-center gap-1.5 transition"
+                                className="flex-1 bg-white hover:bg-rose-50 text-rose-700 border border-rose-200 font-bold py-2.5 rounded-xl text-xs flex items-center justify-center gap-1.5 transition"
                               >
                                 <X className="w-4 h-4" /> Tidak Setuju
                               </button>
@@ -1074,26 +1091,26 @@ export default function HomePage() {
                 </div>
 
                 {tukarKeluar.length > 0 && (
-                  <div className="bg-white rounded-3xl border border-slate-200/80 shadow-sm p-6 space-y-3">
-                    <h3 className="text-sm font-extrabold text-slate-800">
+                  <div className="bg-white rounded-3xl border border-stone-200/90 shadow-sm p-6 space-y-3">
+                    <h3 className="text-sm font-extrabold text-stone-800">
                       Riwayat Pengajuan Tukar Jadwalmu
                     </h3>
                     <div className="space-y-2">
                       {tukarKeluar.map((item) => (
                         <div
                           key={item.id}
-                          className="p-3.5 rounded-2xl bg-slate-50 border border-slate-200/80 flex flex-wrap justify-between items-center gap-2 text-xs"
+                          className="p-3.5 rounded-2xl bg-stone-50 border border-stone-200/80 flex flex-wrap justify-between items-center gap-2 text-xs"
                         >
                           <div>
-                            <p className="font-bold text-slate-800">
+                            <p className="font-bold text-stone-800">
                               Ke: {item.tujuan.nama}{" "}
-                              <span className="font-mono font-normal text-slate-500">
+                              <span className="font-mono font-normal text-stone-500">
                                 ({item.tujuan.nim})
                               </span>{" "}
                               • {item.tujuan.divisi}
                             </p>
-                            <p className="text-slate-500 mt-0.5">
-                              {item.hariPemohon} ↔ {item.hariTujuan} • “{item.alasan}”
+                            <p className="text-stone-500 mt-0.5">
+                              {item.hariPemohon} ↔ {item.hariTujuan} — “{item.alasan}”
                             </p>
                           </div>
                           <span
@@ -1101,8 +1118,8 @@ export default function HomePage() {
                               item.status === "pending"
                                 ? "bg-amber-100 text-amber-800"
                                 : item.status === "disetujui"
-                                ? "bg-emerald-100 text-emerald-700"
-                                : "bg-rose-100 text-rose-700"
+                                ? "bg-emerald-100 text-emerald-800"
+                                : "bg-rose-100 text-rose-800"
                             }`}
                           >
                             {item.status === "pending"
@@ -1118,20 +1135,20 @@ export default function HomePage() {
                 )}
               </div>
 
-              {/* Form Ajukan Tukar Jadwal (Hanya Bisa ke Hari yang Belum Lewat) */}
+              {/* Form Ajukan Tukar Jadwal */}
               <form
                 onSubmit={handleAjukanTukar}
-                className="lg:col-span-5 bg-white rounded-3xl border border-slate-200/80 shadow-sm p-6 space-y-4"
+                className="lg:col-span-5 bg-white rounded-3xl border border-stone-200/90 shadow-sm p-6 space-y-4"
               >
                 <div className="flex items-center gap-2.5">
-                  <div className="w-10 h-10 rounded-xl bg-indigo-50 text-indigo-600 flex items-center justify-center shrink-0">
+                  <div className="w-10 h-10 rounded-xl bg-orange-50 text-orange-800 flex items-center justify-center shrink-0">
                     <ArrowLeftRight className="w-5 h-5" />
                   </div>
                   <div>
-                    <h2 className="text-base font-extrabold text-slate-900">Ajukan Tukar Jadwal</h2>
-                    <p className="text-xs text-slate-500">
+                    <h2 className="text-base font-extrabold text-stone-900">Ajukan Tukar Jadwal</h2>
+                    <p className="text-xs text-stone-500">
                       Jadwalmu saat ini:{" "}
-                      <strong className="text-indigo-600">
+                      <strong className="text-orange-800">
                         {hariPiketSaya || "Belum diatur"}
                       </strong>
                     </p>
@@ -1141,7 +1158,7 @@ export default function HomePage() {
                 {jadwalSayaSudahLewat ? (
                   <div className="p-4 rounded-2xl bg-amber-50 border border-amber-200 text-amber-900 text-xs space-y-1.5">
                     <p className="font-extrabold flex items-center gap-1.5">
-                      <Lock className="w-4 h-4 text-amber-600 shrink-0" />
+                      <Lock className="w-4 h-4 text-amber-700 shrink-0" />
                       Jadwal Piketmu Minggu Ini Sudah Lewat
                     </p>
                     <p className="leading-relaxed opacity-90">
@@ -1150,22 +1167,21 @@ export default function HomePage() {
                   </div>
                 ) : (
                   <>
-                    {/* Input Pencarian Rekan Pengurus (Nama, NIM, Departemen, Hari) */}
                     <div>
-                      <label className="text-xs font-bold text-slate-700 uppercase tracking-wider">
+                      <label className="text-xs font-bold text-stone-700 uppercase tracking-wider">
                         Cari & Pilih Rekan Pengurus Tujuan
                       </label>
-                      <p className="text-[11px] text-slate-400 mt-0.5">
+                      <p className="text-[11px] text-stone-400 mt-0.5">
                         Hanya menampilkan jadwal pada hari yang belum terlewati
                       </p>
                       <div className="relative mt-1.5">
-                        <Search className="w-4 h-4 text-slate-400 absolute left-3.5 top-1/2 -translate-y-1/2" />
+                        <Search className="w-4 h-4 text-stone-400 absolute left-3.5 top-1/2 -translate-y-1/2" />
                         <input
                           type="text"
                           value={searchTukarTarget}
                           onChange={(e) => handleSearchTukarChange(e.target.value)}
                           placeholder="Ketik NIM, nama, departemen, atau hari..."
-                          className="w-full border border-slate-200 focus:border-indigo-500 outline-none rounded-xl pl-10 pr-3.5 py-2.5 text-xs sm:text-sm bg-slate-50/70"
+                          className="w-full border border-stone-200 focus:border-orange-700 outline-none rounded-xl pl-10 pr-3.5 py-2.5 text-xs sm:text-sm bg-stone-50/70"
                         />
                       </div>
 
@@ -1173,7 +1189,7 @@ export default function HomePage() {
                         required
                         value={tujuanId}
                         onChange={(e) => setTujuanId(e.target.value)}
-                        className="w-full mt-2 border border-slate-200 focus:border-indigo-500 outline-none rounded-xl px-3.5 py-3 text-xs sm:text-sm bg-white"
+                        className="w-full mt-2 border border-stone-200 focus:border-orange-700 outline-none rounded-xl px-3.5 py-3 text-xs sm:text-sm bg-white"
                       >
                         <option value="">
                           -- Pilih Pengurus ({kandidatTukarFiltered.length} tersedia) --
@@ -1187,7 +1203,7 @@ export default function HomePage() {
                     </div>
 
                     <div>
-                      <label className="text-xs font-bold text-slate-700 uppercase tracking-wider">
+                      <label className="text-xs font-bold text-stone-700 uppercase tracking-wider">
                         Alasan Tukar Jadwal
                       </label>
                       <textarea
@@ -1196,14 +1212,14 @@ export default function HomePage() {
                         value={alasanTukar}
                         onChange={(e) => setAlasanTukar(e.target.value)}
                         placeholder="Contoh: Ada bentrok jadwal praktikum / kegiatan di hari tersebut..."
-                        className="w-full mt-1.5 border border-slate-200 focus:border-indigo-500 outline-none rounded-xl px-3.5 py-2.5 text-sm"
+                        className="w-full mt-1.5 border border-stone-200 focus:border-orange-700 outline-none rounded-xl px-3.5 py-2.5 text-sm"
                       />
                     </div>
 
                     <button
                       type="submit"
                       disabled={tukarLoading || !hariPiketSaya || kandidatTukarFiltered.length === 0}
-                      className="w-full bg-gradient-to-r from-indigo-600 to-violet-600 hover:from-indigo-700 hover:to-violet-700 disabled:bg-slate-300 text-white font-bold py-3 rounded-xl text-sm flex items-center justify-center gap-2 shadow-md transition"
+                      className="w-full bg-gradient-to-r from-orange-800 to-amber-700 hover:from-orange-900 hover:to-amber-800 disabled:bg-stone-300 text-white font-bold py-3 rounded-xl text-sm flex items-center justify-center gap-2 shadow-md transition"
                     >
                       <Send className="w-4 h-4" />
                       {tukarLoading ? "Mengirim Pengajuan..." : "Kirim Permintaan Tukar"}
@@ -1213,39 +1229,38 @@ export default function HomePage() {
               </form>
             </div>
 
-            {/* DIREKTORI JADWAL SELURUH PENGURUS (DENGAN PENCARIAN NIM, NAMA, DEPT, HARI) */}
-            <div className="bg-white rounded-3xl border border-slate-200/80 shadow-sm p-6 space-y-5">
+            {/* DIREKTORI JADWAL SELURUH PENGURUS */}
+            <div className="bg-white rounded-3xl border border-stone-200/90 shadow-sm p-6 space-y-5">
               <div className="flex flex-col lg:flex-row lg:items-center justify-between gap-3">
                 <div>
-                  <h2 className="text-lg font-extrabold text-slate-900">
+                  <h2 className="text-lg font-extrabold text-stone-900">
                     Jadwal Piket Seluruh Pengurus
                   </h2>
-                  <p className="text-xs text-slate-500">
+                  <p className="text-xs text-stone-500">
                     Cari berdasarkan nama, NIM, atau filter berdasarkan hari maupun departemen
                   </p>
                 </div>
 
                 <div className="flex flex-col sm:flex-row items-stretch sm:items-center gap-2.5">
-                  {/* Search Bar Direktori */}
                   <div className="relative">
-                    <Search className="w-4 h-4 text-slate-400 absolute left-3 top-1/2 -translate-y-1/2" />
+                    <Search className="w-4 h-4 text-stone-400 absolute left-3 top-1/2 -translate-y-1/2" />
                     <input
                       type="text"
                       value={searchDirektori}
                       onChange={(e) => setSearchDirektori(e.target.value)}
                       placeholder="Cari NIM, nama, dept, hari..."
-                      className="w-full sm:w-60 border border-slate-200 focus:border-indigo-500 outline-none rounded-xl pl-9 pr-3 py-2 text-xs font-medium bg-slate-50"
+                      className="w-full sm:w-60 border border-stone-200 focus:border-orange-700 outline-none rounded-xl pl-9 pr-3 py-2 text-xs font-medium bg-stone-50"
                     />
                   </div>
 
-                  <div className="grid grid-cols-2 bg-slate-100 p-1 rounded-xl shrink-0">
+                  <div className="grid grid-cols-2 bg-stone-100 p-1 rounded-xl shrink-0">
                     <button
                       type="button"
                       onClick={() => setJadwalViewMode("hari")}
                       className={`px-3.5 py-2 rounded-lg text-xs font-bold flex items-center justify-center gap-1.5 transition ${
                         jadwalViewMode === "hari"
-                          ? "bg-white text-indigo-600 shadow-sm"
-                          : "text-slate-600"
+                          ? "bg-white text-orange-800 shadow-sm"
+                          : "text-stone-600"
                       }`}
                     >
                       <Users className="w-3.5 h-3.5" /> Per Hari
@@ -1255,8 +1270,8 @@ export default function HomePage() {
                       onClick={() => setJadwalViewMode("departemen")}
                       className={`px-3.5 py-2 rounded-lg text-xs font-bold flex items-center justify-center gap-1.5 transition ${
                         jadwalViewMode === "departemen"
-                          ? "bg-white text-indigo-600 shadow-sm"
-                          : "text-slate-600"
+                          ? "bg-white text-orange-800 shadow-sm"
+                          : "text-stone-600"
                       }`}
                     >
                       <Building2 className="w-3.5 h-3.5" /> Per Departemen
@@ -1272,36 +1287,36 @@ export default function HomePage() {
                     return (
                       <div
                         key={hari}
-                        className="bg-slate-50 border border-slate-200/80 rounded-2xl p-3.5"
+                        className="bg-stone-50 border border-stone-200/80 rounded-2xl p-3.5"
                       >
-                        <div className="flex justify-between items-center pb-2 mb-2.5 border-b border-slate-200">
-                          <span className="font-extrabold text-xs text-indigo-700 uppercase tracking-wider">
+                        <div className="flex justify-between items-center pb-2 mb-2.5 border-b border-stone-200">
+                          <span className="font-extrabold text-xs text-orange-800 uppercase tracking-wider">
                             {hari}
                           </span>
-                          <span className="text-[11px] font-bold bg-white px-2 py-0.5 rounded-md border text-slate-600">
+                          <span className="text-[11px] font-bold bg-white px-2 py-0.5 rounded-md border border-stone-200 text-stone-600">
                             {members.length} org
                           </span>
                         </div>
                         <div className="space-y-2 max-h-96 overflow-y-auto pr-1">
                           {members.length === 0 ? (
-                            <p className="text-xs text-slate-400 italic">Tidak ada data</p>
+                            <p className="text-xs text-stone-400 italic">Tidak ada data</p>
                           ) : (
                             members.map((m) => (
                               <div
                                 key={m.id}
                                 className={`p-2.5 rounded-xl border ${
                                   m.id === user.id
-                                    ? "bg-indigo-50 border-indigo-300"
-                                    : "bg-white border-slate-100"
+                                    ? "bg-orange-50 border-orange-300"
+                                    : "bg-white border-stone-100"
                                 }`}
                               >
-                                <p className="text-xs font-bold text-slate-900 leading-snug">
+                                <p className="text-xs font-bold text-stone-900 leading-snug">
                                   {m.nama} {m.id === user.id && "(Kamu)"}
                                 </p>
-                                <p className="text-[10px] font-mono text-slate-400 mt-0.5">
+                                <p className="text-[10px] font-mono text-stone-400 mt-0.5">
                                   {m.nim}
                                 </p>
-                                <p className="text-[10px] font-semibold text-indigo-600">
+                                <p className="text-[10px] font-semibold text-orange-700">
                                   {m.divisi}
                                 </p>
                               </div>
@@ -1322,30 +1337,30 @@ export default function HomePage() {
                     return (
                       <div
                         key={dept}
-                        className="bg-slate-50 border border-slate-200/80 rounded-2xl p-4"
+                        className="bg-stone-50 border border-stone-200/80 rounded-2xl p-4"
                       >
-                        <div className="flex justify-between items-center pb-2 mb-2.5 border-b border-slate-200">
-                          <span className="font-extrabold text-xs text-violet-700 uppercase tracking-wider">
+                        <div className="flex justify-between items-center pb-2 mb-2.5 border-b border-stone-200">
+                          <span className="font-extrabold text-xs text-orange-800 uppercase tracking-wider">
                             {dept}
                           </span>
-                          <span className="text-[11px] font-bold bg-white px-2 py-0.5 rounded-md border text-slate-600">
+                          <span className="text-[11px] font-bold bg-white px-2 py-0.5 rounded-md border border-stone-200 text-stone-600">
                             {members.length} org
                           </span>
                         </div>
                         <div className="space-y-2 max-h-80 overflow-y-auto pr-1">
                           {members.length === 0 ? (
-                            <p className="text-xs text-slate-400 italic">Belum ada anggota</p>
+                            <p className="text-xs text-stone-400 italic">Belum ada anggota</p>
                           ) : (
                             members.map((m) => (
                               <div
                                 key={m.id}
-                                className="bg-white p-2.5 rounded-xl border border-slate-100 flex justify-between items-center gap-2"
+                                className="bg-white p-2.5 rounded-xl border border-stone-100 flex justify-between items-center gap-2"
                               >
                                 <div>
-                                  <p className="text-xs font-bold text-slate-900">{m.nama}</p>
-                                  <p className="text-[10px] font-mono text-slate-400">{m.nim}</p>
+                                  <p className="text-xs font-bold text-stone-900">{m.nama}</p>
+                                  <p className="text-[10px] font-mono text-stone-400">{m.nim}</p>
                                 </div>
-                                <span className="px-2.5 py-1 rounded-lg bg-indigo-50 text-indigo-700 font-extrabold text-[11px] shrink-0">
+                                <span className="px-2.5 py-1 rounded-lg bg-orange-50 text-orange-800 border border-orange-200 font-extrabold text-[11px] shrink-0">
                                   {m.hari}
                                 </span>
                               </div>

@@ -39,6 +39,20 @@ const DEPARTEMEN_HMIF = [
   "ORKESMA",
 ];
 
+function getTodayWibFormatted(): string {
+  const parts = new Intl.DateTimeFormat("en-CA", {
+    timeZone: "Asia/Jakarta",
+    year: "numeric",
+    month: "2-digit",
+    day: "2-digit",
+  }).formatToParts(new Date());
+
+  const y = parts.find((p) => p.type === "year")?.value;
+  const m = parts.find((p) => p.type === "month")?.value;
+  const d = parts.find((p) => p.type === "day")?.value;
+  return `${y}-${m}-${d}`;
+}
+
 export default function LaporanPage() {
   const router = useRouter();
   const [adminUser, setAdminUser] = useState<any | null>(null);
@@ -103,11 +117,10 @@ export default function LaporanPage() {
 
     setAdminUser(parsedUser);
     setIsAuthorized(true);
-    const now = new Date();
-    const todayFormatted = format(now, "yyyy-MM-dd");
+    const todayFormatted = getTodayWibFormatted();
     setLogDate(todayFormatted);
     setRekapDate(todayFormatted);
-    setRekapMonth(format(now, "yyyy-MM"));
+    setRekapMonth(todayFormatted.slice(0, 7));
     loadJadwalStatus();
     loadLaporanTukar();
   }, [router]);
@@ -127,13 +140,15 @@ export default function LaporanPage() {
   const getRekapRange = () => {
     if (!rekapDate || !rekapMonth) return null;
     if (rekapMode === "mingguan") {
-      const base = new Date(rekapDate);
+      const [y, m, d] = rekapDate.split("-").map(Number);
+      const base = new Date(y, m - 1, d, 12, 0, 0);
       return {
         start: format(startOfWeek(base, { weekStartsOn: 1 }), "yyyy-MM-dd"),
         end: format(endOfWeek(base, { weekStartsOn: 1 }), "yyyy-MM-dd"),
       };
     }
-    const baseMonth = new Date(`${rekapMonth}-01`);
+    const [my, mm] = rekapMonth.split("-").map(Number);
+    const baseMonth = new Date(my, mm - 1, 1, 12, 0, 0);
     return {
       start: format(startOfMonth(baseMonth), "yyyy-MM-dd"),
       end: format(endOfMonth(baseMonth), "yyyy-MM-dd"),

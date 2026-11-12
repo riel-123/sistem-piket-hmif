@@ -13,47 +13,69 @@ const HARI_MAP: Record<number, HariPiket | null> = {
   6: null,
 };
 
+// Format tanggal murni YYYY-MM-DD di zona waktu Asia/Jakarta (tanpa konversi UTC toISOString)
+function formatWibDateStr(dateInput: Date): string {
+  const parts = new Intl.DateTimeFormat("en-CA", {
+    timeZone: "Asia/Jakarta",
+    year: "numeric",
+    month: "2-digit",
+    day: "2-digit",
+  }).formatToParts(dateInput);
+
+  const y = parts.find((p) => p.type === "year")?.value;
+  const m = parts.find((p) => p.type === "month")?.value;
+  const d = parts.find((p) => p.type === "day")?.value;
+  return `${y}-${m}-${d}`;
+}
+
 function getWibContext() {
-  const nowWib = new Date(new Date().toLocaleString("en-US", { timeZone: "Asia/Jakarta" }));
-  const yyyy = nowWib.getFullYear();
-  const mm = String(nowWib.getMonth() + 1).padStart(2, "0");
-  const dd = String(nowWib.getDate()).padStart(2, "0");
-  const todayStr = `${yyyy}-${mm}-${dd}`;
-  const isAfter5PM = nowWib.getHours() >= 17;
+  const now = new Date();
+  const todayStr = formatWibDateStr(now);
 
-  // Hitung tanggal Senin minggu ini untuk acuan jadwal minggu berjalan
-  const mondayDate = new Date(nowWib);
-  const day = mondayDate.getDay();
-  const diffToMonday = day === 0 ? -6 : 1 - day;
-  mondayDate.setDate(mondayDate.getDate() + diffToMonday);
+  const hourStr = new Intl.DateTimeFormat("en-GB", {
+    timeZone: "Asia/Jakarta",
+    hour: "2-digit",
+    hour12: false,
+  }).format(now);
+  const isAfter5PM = Number(hourStr) >= 17;
 
-  const mY = mondayDate.getFullYear();
-  const mM = String(mondayDate.getMonth() + 1).padStart(2, "0");
-  const mD = String(mondayDate.getDate()).padStart(2, "0");
-  const currentWeekMondayStr = `${mY}-${mM}-${mD}`;
+  // Hitung Senin minggu berjalan secara murni dari string YYYY-MM-DD WIB
+  const [y, m, d] = todayStr.split("-").map(Number);
+  const wibMidnight = new Date(Date.UTC(y, m - 1, d, 12, 0, 0)); // Pakai jam 12 siang UTC agar aman dari geser hari
+  const dayOfWeek = wibMidnight.getUTCDay(); // 0=Minggu, 1=Senin..6=Sabtu
+  const diffToMonday = dayOfWeek === 0 ? -6 : 1 - dayOfWeek;
+  wibMidnight.setUTCDate(wibMidnight.getUTCDate() + diffToMonday);
+
+  const currentWeekMondayStr = `${wibMidnight.getUTCFullYear()}-${String(
+    wibMidnight.getUTCMonth() + 1
+  ).padStart(2, "0")}-${String(wibMidnight.getUTCDate()).padStart(2, "0")}`;
 
   return { todayStr, isAfter5PM, currentWeekMondayStr };
 }
 
 function getDatesInRange(startStr: string, endStr: string) {
   const dates: { tanggal: string; hari: HariPiket }[] = [];
-  const curr = new Date(`${startStr}T00:00:00+07:00`);
-  const end = new Date(`${endStr}T00:00:00+07:00`);
+  const [sy, sm, sd] = startStr.split("-").map(Number);
+  const [ey, em, ed] = endStr.split("-").map(Number);
+
+  // Gunakan jam 12:00 UTC untuk iterasi kalender murni agar tidak pernah tergeser oleh timezone server
+  const curr = new Date(Date.UTC(sy, sm - 1, sd, 12, 0, 0));
+  const end = new Date(Date.UTC(ey, em - 1, ed, 12, 0, 0));
 
   while (curr <= end) {
-    const namaHari = HARI_MAP[curr.getDay()];
+    const namaHari = HARI_MAP[curr.getUTCDay()];
     if (namaHari) {
-      const yyyy = curr.getFullYear();
-      const mm = String(curr.getMonth() + 1).padStart(2, "0");
-      const dd = String(curr.getDate()).padStart(2, "0");
+      const yyyy = curr.getUTCFullYear();
+      const mm = String(curr.getUTCMonth() + 1).padStart(2, "0");
+      const dd = String(curr.getUTCDate()).padStart(2, "0");
       dates.push({ tanggal: `${yyyy}-${mm}-${dd}`, hari: namaHari });
     }
-    curr.setDate(curr.getDate() + 1);
+    curr.setUTCDate(curr.getUTCDate() + 1);
   }
   return dates;
 }
 
-// Hapus otomatis seluruh foto bukti dari hari-hari sebelumnya (< todayStr)
+// Hapus otomatis foto bukti dari hari-hari sebelumnya (< todayStr)
 async function cleanupDailyPhotos(todayStr: string) {
   try {
     const oldRecords = await prisma.presensi.findMany({
@@ -96,7 +118,6 @@ export async function GET(req: NextRequest) {
 
   const { todayStr, isAfter5PM, currentWeekMondayStr } = getWibContext();
 
-  // Jalankan pembersihan foto hari sebelumnya setiap ganti hari
   await cleanupDailyPhotos(todayStr);
 
   const activeDates = getDatesInRange(start, end);
@@ -114,11 +135,6 @@ export async function GET(req: NextRequest) {
   const detailLogs: any[] = [];
   const rekapUser = users.map((u) => {
     const hariTugasMingguIni = u.jadwalPiket.map((j) => j.hari);
-    const createdDateStr = new Date(
-      new Date(u.createdAt).toLocaleString("en-US", { timeZone: "Asia/Jakarta" })
-    )
-      .toISOString()
-      .slice(0, 10);
 
     let hadir = 0;
     let izin = 0;
@@ -133,7 +149,6 @@ export async function GET(req: NextRequest) {
       if (!isCurrentWeek) {
         if (!found) return;
       } else {
-        if (tanggal < createdDateStr && !found) return;
         if (!hariTugasMingguIni.includes(hari) && !found) return;
       }
 
@@ -156,7 +171,6 @@ export async function GET(req: NextRequest) {
         status: statusFinal,
       });
 
-      // Foto hanya tersedia untuk hari ini
       const isToday = tanggal === todayStr;
       const fotoSekreAktif = isToday ? found?.fotoSekre || null : null;
       const fotoIzinAktif = isToday ? found?.fotoBuktiIzin || null : null;

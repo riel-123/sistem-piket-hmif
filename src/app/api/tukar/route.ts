@@ -40,46 +40,47 @@ function isHariSudahLewatWib(hariTarget: HariPiket): { lewat: boolean; alasan?: 
 }
 
 export async function GET(req: NextRequest) {
-  const { searchParams } = new URL(req.url);
-  const mode = searchParams.get("mode");
-  const userId = Number(searchParams.get("userId"));
+  try {
+    const { searchParams } = new URL(req.url);
+    const mode = searchParams.get("mode");
+    const userId = Number(searchParams.get("userId"));
 
-  // Mode khusus Panel Admin: ambil semua riwayat tukar jadwal seluruh pengurus
-  if (mode === "admin") {
-    const allTukar = await prisma.tukarJadwal.findMany({
-      include: {
-        pemohon: { select: { id: true, nama: true, divisi: true, nim: true } },
-        tujuan: { select: { id: true, nama: true, divisi: true, nim: true } },
-      },
-      orderBy: { createdAt: "desc" },
-    });
-    return NextResponse.json({ allTukar });
+    // Ambil seluruh riwayat tukar jadwal untuk Admin (atau jika userId tidak dikirim)
+    if (mode === "admin" || !userId) {
+      const allTukar = await prisma.tukarJadwal.findMany({
+        include: {
+          pemohon: { select: { id: true, nama: true, divisi: true, nim: true } },
+          tujuan: { select: { id: true, nama: true, divisi: true, nim: true } },
+        },
+        orderBy: { createdAt: "desc" },
+      });
+      return NextResponse.json({ allTukar, masuk: [], keluar: [] });
+    }
+
+    const [masuk, keluar] = await Promise.all([
+      prisma.tukarJadwal.findMany({
+        where: { tujuanId: userId },
+        include: {
+          pemohon: { select: { id: true, nama: true, divisi: true, nim: true } },
+          tujuan: { select: { id: true, nama: true, divisi: true, nim: true } },
+        },
+        orderBy: { createdAt: "desc" },
+      }),
+      prisma.tukarJadwal.findMany({
+        where: { pemohonId: userId },
+        include: {
+          pemohon: { select: { id: true, nama: true, divisi: true, nim: true } },
+          tujuan: { select: { id: true, nama: true, divisi: true, nim: true } },
+        },
+        orderBy: { createdAt: "desc" },
+      }),
+    ]);
+
+    return NextResponse.json({ masuk, keluar });
+  } catch (error) {
+    console.error("Error GET /api/tukar:", error);
+    return NextResponse.json({ allTukar: [], masuk: [], keluar: [] }, { status: 500 });
   }
-
-  if (!userId) {
-    return NextResponse.json({ masuk: [], keluar: [] });
-  }
-
-  const [masuk, keluar] = await Promise.all([
-    prisma.tukarJadwal.findMany({
-      where: { tujuanId: userId },
-      include: {
-        pemohon: { select: { id: true, nama: true, divisi: true, nim: true } },
-        tujuan: { select: { id: true, nama: true, divisi: true, nim: true } },
-      },
-      orderBy: { createdAt: "desc" },
-    }),
-    prisma.tukarJadwal.findMany({
-      where: { pemohonId: userId },
-      include: {
-        pemohon: { select: { id: true, nama: true, divisi: true, nim: true } },
-        tujuan: { select: { id: true, nama: true, divisi: true, nim: true } },
-      },
-      orderBy: { createdAt: "desc" },
-    }),
-  ]);
-
-  return NextResponse.json({ masuk, keluar });
 }
 
 export async function POST(req: NextRequest) {

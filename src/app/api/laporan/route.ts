@@ -3,6 +3,9 @@ import prisma from "@/lib/prisma";
 import { supabaseAdmin } from "@/lib/supabase";
 import { HariPiket } from "@prisma/client";
 
+// Sistem resmi mulai berlaku Jumat, 13 November 2026 (hari sebelumnya tidak dihitung Alfa)
+const TANGGAL_MULAI_EFEKTIF = "2026-11-13";
+
 const HARI_MAP: Record<number, HariPiket | null> = {
   0: null,
   1: "Senin",
@@ -13,7 +16,6 @@ const HARI_MAP: Record<number, HariPiket | null> = {
   6: null,
 };
 
-// Format tanggal murni YYYY-MM-DD di zona waktu Asia/Jakarta (tanpa konversi UTC toISOString)
 function formatWibDateStr(dateInput: Date): string {
   const parts = new Intl.DateTimeFormat("en-CA", {
     timeZone: "Asia/Jakarta",
@@ -39,10 +41,9 @@ function getWibContext() {
   }).format(now);
   const isAfter5PM = Number(hourStr) >= 17;
 
-  // Hitung Senin minggu berjalan secara murni dari string YYYY-MM-DD WIB
   const [y, m, d] = todayStr.split("-").map(Number);
-  const wibMidnight = new Date(Date.UTC(y, m - 1, d, 12, 0, 0)); // Pakai jam 12 siang UTC agar aman dari geser hari
-  const dayOfWeek = wibMidnight.getUTCDay(); // 0=Minggu, 1=Senin..6=Sabtu
+  const wibMidnight = new Date(Date.UTC(y, m - 1, d, 12, 0, 0));
+  const dayOfWeek = wibMidnight.getUTCDay();
   const diffToMonday = dayOfWeek === 0 ? -6 : 1 - dayOfWeek;
   wibMidnight.setUTCDate(wibMidnight.getUTCDate() + diffToMonday);
 
@@ -58,7 +59,6 @@ function getDatesInRange(startStr: string, endStr: string) {
   const [sy, sm, sd] = startStr.split("-").map(Number);
   const [ey, em, ed] = endStr.split("-").map(Number);
 
-  // Gunakan jam 12:00 UTC untuk iterasi kalender murni agar tidak pernah tergeser oleh timezone server
   const curr = new Date(Date.UTC(sy, sm - 1, sd, 12, 0, 0));
   const end = new Date(Date.UTC(ey, em - 1, ed, 12, 0, 0));
 
@@ -75,7 +75,6 @@ function getDatesInRange(startStr: string, endStr: string) {
   return dates;
 }
 
-// Hapus otomatis foto bukti dari hari-hari sebelumnya (< todayStr)
 async function cleanupDailyPhotos(todayStr: string) {
   try {
     const oldRecords = await prisma.presensi.findMany({
@@ -143,7 +142,10 @@ export async function GET(req: NextRequest) {
     const riwayatHari: { tanggal: string; hari: string; status: string }[] = [];
 
     activeDates.forEach(({ tanggal, hari }) => {
+      // Abaikan tanggal sebelum sistem resmi dimulai (sebelum 13 Nov 2026) jika tidak ada catatan presensi
       const found = u.presensi.find((p) => p.tanggal === tanggal);
+      if (tanggal < TANGGAL_MULAI_EFEKTIF && !found) return;
+
       const isCurrentWeek = tanggal >= currentWeekMondayStr;
 
       if (!isCurrentWeek) {

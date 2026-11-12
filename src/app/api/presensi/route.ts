@@ -137,7 +137,6 @@ export async function POST(req: NextRequest) {
         data: {
           userId,
           tanggal: tanggalWib,
-          hari: hariIni,
           status: "hadir",
           waktuLapor: waktuLaporWib,
           fotoSekre: publicUrl,
@@ -156,7 +155,6 @@ export async function POST(req: NextRequest) {
         data: {
           userId,
           tanggal: tanggalWib,
-          hari: hariIni,
           status: "izin",
           waktuLapor: waktuLaporWib,
           jenisIzin,

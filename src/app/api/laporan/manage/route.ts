@@ -7,72 +7,7 @@ async function verifyAdmin(adminId: number) {
   return Boolean(admin && String(admin.role).toLowerCase() === "admin");
 }
 
-// PATCH: Admin menyetujui (approve) atau menolak (tolak -> alfa) bukti foto pengurus
-export async function PATCH(req: NextRequest) {
-  try {
-    const { adminId, userId, tanggal, aksi } = await req.json();
-
-    if (!(await verifyAdmin(adminId))) {
-      return NextResponse.json({ error: "Akses ditolak. Khusus Admin." }, { status: 403 });
-    }
-
-    const uId = Number(userId);
-    if (!uId || !tanggal || !["approve", "tolak"].includes(aksi)) {
-      return NextResponse.json({ error: "Data validasi tidak lengkap." }, { status: 400 });
-    }
-
-    const record = await prisma.presensi.findFirst({
-      where: { userId: uId, tanggal: String(tanggal) },
-    });
-
-    if (!record) {
-      return NextResponse.json(
-        { error: "Pengurus ini belum mengirim laporan foto pada tanggal tersebut." },
-        { status: 404 }
-      );
-    }
-
-    const cleanChecklist = (record.checklistTugas || []).filter(
-      (item) => item !== "__PENDING_ADMIN__"
-    );
-    const cleanAlasan = record.alasanIzin
-      ? record.alasanIzin.replace(/^__PENDING_ADMIN__\s*/, "")
-      : null;
-
-    if (aksi === "approve") {
-      await prisma.presensi.update({
-        where: { id: record.id },
-        data: {
-          checklistTugas: cleanChecklist,
-          alasanIzin: cleanAlasan,
-        },
-      });
-
-      return NextResponse.json({
-        message: `Bukti piket tanggal ${tanggal} berhasil di-APPROVE (Dinyatakan Sah ${record.status.toUpperCase()})!`,
-      });
-    } else {
-      // Jika ditolak oleh admin, ubah status menjadi Alfa
-      await prisma.presensi.update({
-        where: { id: record.id },
-        data: {
-          status: "alfa",
-          checklistTugas: cleanChecklist,
-          alasanIzin: cleanAlasan ? `[Ditolak Admin] ${cleanAlasan}` : "[Ditolak Admin]",
-        },
-      });
-
-      return NextResponse.json({
-        message: `Laporan tanggal ${tanggal} DITOLAK oleh Admin dan dicatat sebagai ALFA.`,
-      });
-    }
-  } catch (error) {
-    console.error("Error PATCH /api/laporan/manage:", error);
-    return NextResponse.json({ error: "Gagal memproses validasi laporan." }, { status: 500 });
-  }
-}
-
-// POST: Input / Edit manual status presensi oleh Admin
+// CREATE / UPDATE: Tambah atau ubah status presensi pengurus pada tanggal tertentu
 export async function POST(req: NextRequest) {
   try {
     const { adminId, userId, tanggal, status, waktuLapor, jenisIzin, alasanIzin } =
@@ -85,7 +20,7 @@ export async function POST(req: NextRequest) {
     const uId = Number(userId);
     if (!uId || !tanggal || !["hadir", "izin", "alfa"].includes(status)) {
       return NextResponse.json(
-        { error: "Pilih pengurus, tanggal, dan status dengan benar." },
+        { error: "Pilih pengurus, tanggal, dan status (Hadir/Izin/Alfa) dengan benar." },
         { status: 400 }
       );
     }
@@ -98,8 +33,8 @@ export async function POST(req: NextRequest) {
       status: status as "hadir" | "izin" | "alfa",
       waktuLapor: waktuLapor && String(waktuLapor).trim() ? String(waktuLapor).trim() : "Admin",
       jenisIzin: status === "izin" ? String(jenisIzin || "Izin Admin") : null,
-      alasanIzin: status === "izin" ? String(alasanIzin || "Divalidasi Admin") : null,
-      checklistTugas: status === "hadir" ? ["Divalidasi oleh Admin"] : [],
+      alasanIzin: status === "izin" ? String(alasanIzin || "Diinput manual oleh Admin") : null,
+      checklistTugas: status === "hadir" ? ["Dikonfirmasi oleh Admin"] : [],
     };
 
     if (existing) {
@@ -118,7 +53,7 @@ export async function POST(req: NextRequest) {
     }
 
     return NextResponse.json({
-      message: `Status kehadiran tanggal ${tanggal} berhasil disimpan sebagai ${status.toUpperCase()}!`,
+      message: `Catatan kehadiran tanggal ${tanggal} berhasil disimpan sebagai ${status.toUpperCase()}!`,
     });
   } catch (error) {
     console.error("Error POST /api/laporan/manage:", error);
@@ -126,7 +61,7 @@ export async function POST(req: NextRequest) {
   }
 }
 
-// DELETE: Reset / Hapus catatan presensi
+// DELETE: Hapus catatan presensi tertentu dari database (reset status hari tersebut)
 export async function DELETE(req: NextRequest) {
   try {
     const { searchParams } = new URL(req.url);
@@ -147,7 +82,7 @@ export async function DELETE(req: NextRequest) {
     });
 
     return NextResponse.json({
-      message: `Catatan presensi tanggal ${tanggal} berhasil direset.`,
+      message: `Catatan presensi pada tanggal ${tanggal} berhasil dihapus/direset.`,
     });
   } catch (error) {
     console.error("Error DELETE /api/laporan/manage:", error);

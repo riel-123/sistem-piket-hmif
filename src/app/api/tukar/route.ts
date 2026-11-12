@@ -12,15 +12,14 @@ const URUTAN_HARI: Record<HariPiket, number> = {
 
 function isHariSudahLewatWib(hariTarget: HariPiket): { lewat: boolean; alasan?: string } {
   const nowWib = new Date(new Date().toLocaleString("en-US", { timeZone: "Asia/Jakarta" }));
-  const dayOfWeek = nowWib.getDay(); // 0 = Minggu, 1 = Senin, ..., 5 = Jumat, 6 = Sabtu
+  const dayOfWeek = nowWib.getDay();
   const jam = nowWib.getHours();
 
-  // Sabtu (6) atau Minggu (0) dianggap persiapan minggu baru (belum ada hari yang lewat untuk minggu depan)
   if (dayOfWeek === 0 || dayOfWeek === 6) {
     return { lewat: false };
   }
 
-  const indeksHariIni = dayOfWeek; // 1 (Senin) .. 5 (Jumat)
+  const indeksHariIni = dayOfWeek;
   const indeksTarget = URUTAN_HARI[hariTarget];
 
   if (indeksTarget < indeksHariIni) {
@@ -42,7 +41,20 @@ function isHariSudahLewatWib(hariTarget: HariPiket): { lewat: boolean; alasan?: 
 
 export async function GET(req: NextRequest) {
   const { searchParams } = new URL(req.url);
+  const mode = searchParams.get("mode");
   const userId = Number(searchParams.get("userId"));
+
+  // Mode khusus Panel Admin: ambil semua riwayat tukar jadwal seluruh pengurus
+  if (mode === "admin") {
+    const allTukar = await prisma.tukarJadwal.findMany({
+      include: {
+        pemohon: { select: { id: true, nama: true, divisi: true, nim: true } },
+        tujuan: { select: { id: true, nama: true, divisi: true, nim: true } },
+      },
+      orderBy: { createdAt: "desc" },
+    });
+    return NextResponse.json({ allTukar });
+  }
 
   if (!userId) {
     return NextResponse.json({ masuk: [], keluar: [] });
@@ -100,7 +112,6 @@ export async function POST(req: NextRequest) {
       );
     }
 
-    // Validasi: jadwal pemohon tidak boleh sudah lewat
     const cekPemohon = isHariSudahLewatWib(hariPemohon);
     if (cekPemohon.lewat) {
       return NextResponse.json(
@@ -109,11 +120,13 @@ export async function POST(req: NextRequest) {
       );
     }
 
-    // Validasi: jadwal tujuan tidak boleh hari sebelumnya / sudah lewat
     const cekTujuan = isHariSudahLewatWib(hariTujuan);
     if (cekTujuan.lewat) {
       return NextResponse.json(
-        { error: cekTujuan.alasan || `Tidak bisa bertukar dengan hari ${hariTujuan} yang sudah lewat.` },
+        {
+          error:
+            cekTujuan.alasan || `Tidak bisa bertukar dengan hari ${hariTujuan} yang sudah lewat.`,
+        },
         { status: 400 }
       );
     }
@@ -196,7 +209,6 @@ export async function PATCH(req: NextRequest) {
     const hariAktualPemohon = tukar.pemohon.jadwalPiket[0]?.hari || tukar.hariPemohon;
     const hariAktualTujuan = tukar.tujuan.jadwalPiket[0]?.hari || tukar.hariTujuan;
 
-    // Pastikan saat disetujui kedua hari belum terlewati
     const cekPemohon = isHariSudahLewatWib(hariAktualPemohon);
     const cekTujuan = isHariSudahLewatWib(hariAktualTujuan);
     if (cekPemohon.lewat || cekTujuan.lewat) {

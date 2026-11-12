@@ -19,6 +19,7 @@ import {
   Sparkles,
   Building2,
   Search,
+  ArrowLeftRight,
 } from "lucide-react";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
@@ -55,6 +56,10 @@ export default function LaporanPage() {
   const [rekapUser, setRekapUser] = useState<any[]>([]);
   const [searchRekap, setSearchRekap] = useState<string>("");
 
+  // 3. State LAPORAN TUKAR JADWAL (Admin Monitoring)
+  const [allTukarList, setAllTukarList] = useState<any[]>([]);
+  const [searchTukarLog, setSearchTukarLog] = useState<string>("");
+
   const [previewModal, setPreviewModal] = useState<any | null>(null);
   const [copiedType, setCopiedType] = useState<string | null>(null);
 
@@ -72,6 +77,14 @@ export default function LaporanPage() {
       .then((resData) => {
         setCanShuffle(Boolean(resData.isAllowed));
         setJadwalList(resData.users || []);
+      });
+  };
+
+  const loadLaporanTukar = () => {
+    fetch("/api/tukar?mode=admin")
+      .then((res) => res.json())
+      .then((resData) => {
+        setAllTukarList(resData.allTukar || []);
       });
   };
 
@@ -96,9 +109,9 @@ export default function LaporanPage() {
     setRekapDate(todayFormatted);
     setRekapMonth(format(now, "yyyy-MM"));
     loadJadwalStatus();
+    loadLaporanTukar();
   }, [router]);
 
-  // Fetch Detail Log (Khusus Harian)
   const fetchDetailLogHarian = () => {
     if (!logDate) return;
     fetch(`/api/laporan?start=${logDate}&end=${logDate}`)
@@ -111,7 +124,6 @@ export default function LaporanPage() {
     fetchDetailLogHarian();
   }, [isAuthorized, logDate]);
 
-  // Fetch Rekap Kehadiran (Mingguan / Bulanan)
   const getRekapRange = () => {
     if (!rekapDate || !rekapMonth) return null;
     if (rekapMode === "mingguan") {
@@ -191,9 +203,7 @@ export default function LaporanPage() {
     }
   };
 
-  // =========================================================================
-  // SHARE WHATSAPP: KHUSUS JADWAL PER HARI & PER DEPARTEMEN
-  // =========================================================================
+  // SHARE WHATSAPP: JADWAL PER HARI & PER DEPARTEMEN
   const copyJadwalWAPerHari = () => {
     const perHariLines = HARI_ORDER.map((hari) => {
       const anggotaHariIni = jadwalList.filter((u) => u.hari === hari);
@@ -235,9 +245,7 @@ export default function LaporanPage() {
     setTimeout(() => setCopiedType(null), 2500);
   };
 
-  // =========================================================================
-  // COPY EXCEL (TSV): KHUSUS REKAP KEHADIRAN & DETAIL LOG HARIAN
-  // =========================================================================
+  // COPY EXCEL (TSV): REKAP KEHADIRAN, DETAIL LOG HARIAN, & LAPORAN TUKAR JADWAL
   const copyRekapKehadiranExcel = () => {
     const header = [
       "No",
@@ -316,9 +324,45 @@ export default function LaporanPage() {
     setTimeout(() => setCopiedType(null), 2500);
   };
 
-  // =========================================================================
-  // DOWNLOAD FILE EXCEL (.XLSX): PER HARI & PER DEPARTEMEN
-  // =========================================================================
+  const copyTukarJadwalExcel = () => {
+    const header = [
+      "No",
+      "Waktu Pengajuan",
+      "Pemohon",
+      "NIM Pemohon",
+      "Hari Pemohon",
+      "Penerima Tukar",
+      "NIM Penerima",
+      "Hari Penerima",
+      "Alasan",
+      "Status",
+    ].join("\t");
+
+    const rows = allTukarList.map((t, idx) =>
+      [
+        idx + 1,
+        format(new Date(t.createdAt), "yyyy-MM-dd HH:mm"),
+        t.pemohon.nama,
+        t.pemohon.nim,
+        t.hariPemohon,
+        t.tujuan.nama,
+        t.tujuan.nim,
+        t.hariTujuan,
+        t.alasan.replace(/\s+/g, " "),
+        t.status.toUpperCase(),
+      ].join("\t")
+    );
+
+    navigator.clipboard.writeText([header, ...rows].join("\n"));
+    setCopiedType("tukar_excel");
+    setShuffleMsg({
+      type: "ok",
+      text: "Tabel Laporan Tukar Jadwal tersalin! Tinggal Ctrl+V di Excel / Google Sheets.",
+    });
+    setTimeout(() => setCopiedType(null), 2500);
+  };
+
+  // DOWNLOAD FILE EXCEL (.XLSX)
   const exportExcelPerHari = () => {
     const wb = XLSX.utils.book_new();
 
@@ -363,10 +407,24 @@ export default function LaporanPage() {
           .join("; "),
       }))
     );
+    const wsTukar = XLSX.utils.json_to_sheet(
+      allTukarList.map((t) => ({
+        Waktu: format(new Date(t.createdAt), "yyyy-MM-dd HH:mm"),
+        Pemohon: t.pemohon.nama,
+        NIM_Pemohon: t.pemohon.nim,
+        Hari_Pemohon: t.hariPemohon,
+        Penerima: t.tujuan.nama,
+        NIM_Penerima: t.tujuan.nim,
+        Hari_Penerima: t.hariTujuan,
+        Alasan: t.alasan,
+        Status: t.status.toUpperCase(),
+      }))
+    );
 
     XLSX.utils.book_append_sheet(wb, wsJadwalHari, "Jadwal Per Hari");
     XLSX.utils.book_append_sheet(wb, wsLogHarian, "Detail Log Harian");
     XLSX.utils.book_append_sheet(wb, wsRekap, "Rekap Kehadiran");
+    XLSX.utils.book_append_sheet(wb, wsTukar, "Laporan Tukar Jadwal");
     XLSX.writeFile(wb, `Laporan-Piket-Per-Hari-${logDate || "rekap"}.xlsx`);
   };
 
@@ -400,20 +458,22 @@ export default function LaporanPage() {
     });
 
     const wsDept = XLSX.utils.json_to_sheet(rowsPerDept);
-    const wsLogHarian = XLSX.utils.json_to_sheet(
-      detailLogs.map((l) => ({
-        Departemen: l.divisi,
-        Tanggal: l.tanggal,
-        Hari: l.hari,
-        NIM: l.nim,
-        Nama: l.nama,
-        Status: l.status.toUpperCase(),
-        Waktu_Lapor: l.waktuLapor,
+    const wsTukar = XLSX.utils.json_to_sheet(
+      allTukarList.map((t) => ({
+        Waktu: format(new Date(t.createdAt), "yyyy-MM-dd HH:mm"),
+        Pemohon: t.pemohon.nama,
+        NIM_Pemohon: t.pemohon.nim,
+        Hari_Pemohon: t.hariPemohon,
+        Penerima: t.tujuan.nama,
+        NIM_Penerima: t.tujuan.nim,
+        Hari_Penerima: t.hariTujuan,
+        Alasan: t.alasan,
+        Status: t.status.toUpperCase(),
       }))
     );
 
     XLSX.utils.book_append_sheet(wb, wsDept, "Jadwal & Rekap Per Departemen");
-    XLSX.utils.book_append_sheet(wb, wsLogHarian, "Detail Log Harian");
+    XLSX.utils.book_append_sheet(wb, wsTukar, "Laporan Tukar Jadwal");
     XLSX.writeFile(wb, `Laporan-Piket-Per-Departemen-${logDate || "rekap"}.xlsx`);
   };
 
@@ -443,6 +503,20 @@ export default function LaporanPage() {
       u.nama.toLowerCase().includes(q) ||
       String(u.nim).toLowerCase().includes(q) ||
       u.divisi.toLowerCase().includes(q)
+    );
+  });
+
+  const filteredTukarList = allTukarList.filter((t) => {
+    const q = searchTukarLog.trim().toLowerCase();
+    if (!q) return true;
+    return (
+      t.pemohon.nama.toLowerCase().includes(q) ||
+      String(t.pemohon.nim).toLowerCase().includes(q) ||
+      t.tujuan.nama.toLowerCase().includes(q) ||
+      String(t.tujuan.nim).toLowerCase().includes(q) ||
+      t.hariPemohon.toLowerCase().includes(q) ||
+      t.hariTujuan.toLowerCase().includes(q) ||
+      t.status.toLowerCase().includes(q)
     );
   });
 
@@ -601,7 +675,6 @@ export default function LaporanPage() {
             </span>
           </div>
 
-          {/* GRID 1: TAMPILAN PER HARI (SENIN - JUMAT) + DROPDOWN EDIT */}
           {jadwalTab === "hari" ? (
             <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-5 gap-3">
               {HARI_ORDER.map((hari) => {
@@ -654,7 +727,6 @@ export default function LaporanPage() {
               })}
             </div>
           ) : (
-            /* GRID 2: TAMPILAN PER DEPARTEMEN HMIF + DROPDOWN EDIT */
             <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-3.5">
               {daftarDepartemenTampil.map((dept) => {
                 const members = jadwalList.filter(
@@ -713,7 +785,6 @@ export default function LaporanPage() {
         {/* POSISI ATAS: DETAIL LOG KEHADIRAN HARIAN (KHUSUS HARIAN SAJA)   */}
         {/* ============================================================== */}
         <div className="space-y-4">
-          {/* 4 Summary Cards Harian */}
           <div className="grid grid-cols-2 lg:grid-cols-4 gap-3 sm:gap-4">
             <div className="bg-white p-4 sm:p-5 rounded-2xl border border-slate-200/80 shadow-sm flex items-center justify-between">
               <div>
@@ -768,7 +839,6 @@ export default function LaporanPage() {
               </div>
 
               <div className="flex flex-col sm:flex-row items-stretch sm:items-center gap-2">
-                {/* Copy Tabel Log Harian ke Excel */}
                 <button
                   type="button"
                   onClick={copyLogHarianExcel}
@@ -782,7 +852,6 @@ export default function LaporanPage() {
                   {copiedType === "log_excel" ? "Tersalin!" : "Copy Tabel Log (Excel)"}
                 </button>
 
-                {/* Pencarian Detail Log */}
                 <div className="relative">
                   <Search className="w-4 h-4 text-slate-400 absolute left-3 top-1/2 -translate-y-1/2" />
                   <input
@@ -794,7 +863,6 @@ export default function LaporanPage() {
                   />
                 </div>
 
-                {/* Pemilih Tanggal Khusus Harian */}
                 <div className="flex items-center gap-2 bg-slate-50 border border-slate-200 rounded-xl px-3 py-2">
                   <Calendar className="w-4 h-4 text-indigo-600 shrink-0" />
                   <input
@@ -891,7 +959,6 @@ export default function LaporanPage() {
             </div>
 
             <div className="flex flex-wrap items-center gap-2">
-              {/* Copy Tabel Rekap Langsung ke Excel */}
               <button
                 type="button"
                 onClick={copyRekapKehadiranExcel}
@@ -905,7 +972,6 @@ export default function LaporanPage() {
                 Copy Tabel Rekap (Excel)
               </button>
 
-              {/* Pencarian Rekap Kehadiran */}
               <div className="relative">
                 <Search className="w-4 h-4 text-slate-400 absolute left-3 top-1/2 -translate-y-1/2" />
                 <input
@@ -917,7 +983,6 @@ export default function LaporanPage() {
                 />
               </div>
 
-              {/* Filter Mingguan / Bulanan */}
               <div className="grid grid-cols-2 bg-slate-100 p-1 rounded-xl shrink-0">
                 <button
                   type="button"
@@ -943,7 +1008,6 @@ export default function LaporanPage() {
                 </button>
               </div>
 
-              {/* Pemilih Minggu / Bulan */}
               <div className="flex items-center gap-2 bg-slate-50 border border-slate-200 rounded-xl px-3 py-1.5">
                 <Calendar className="w-4 h-4 text-indigo-600 shrink-0" />
                 {rekapMode === "bulanan" ? (
@@ -1025,6 +1089,114 @@ export default function LaporanPage() {
                         ) : (
                           <span className="text-xs text-slate-400">Belum ada jadwal/catatan</span>
                         )}
+                      </td>
+                    </tr>
+                  ))
+                )}
+              </tbody>
+            </table>
+          </div>
+        </div>
+
+        {/* ============================================================== */}
+        {/* LAPORAN & RIWAYAT TUKAR JADWAL (MONITORING ADMIN)              */}
+        {/* ============================================================== */}
+        <div className="bg-white rounded-2xl border border-slate-200/80 shadow-sm overflow-hidden">
+          <div className="p-4 sm:p-5 border-b border-slate-100 flex flex-col lg:flex-row lg:items-center justify-between gap-3">
+            <div className="flex items-center gap-2.5">
+              <div className="w-9 h-9 rounded-xl bg-violet-50 text-violet-600 flex items-center justify-center shrink-0">
+                <ArrowLeftRight className="w-4 h-4" />
+              </div>
+              <div>
+                <h2 className="font-extrabold text-slate-800 text-sm sm:text-base">
+                  Laporan Pertukaran Jadwal ({filteredTukarList.length} Riwayat)
+                </h2>
+                <p className="text-xs text-slate-400">
+                  Merekam setiap pengajuan dan persetujuan tukar hari piket antar pengurus
+                </p>
+              </div>
+            </div>
+
+            <div className="flex flex-col sm:flex-row items-stretch sm:items-center gap-2">
+              <button
+                type="button"
+                onClick={copyTukarJadwalExcel}
+                className="bg-violet-50 hover:bg-violet-100 text-violet-700 border border-violet-200 px-3 py-2 rounded-xl text-xs font-bold flex items-center justify-center gap-1.5 transition shrink-0"
+              >
+                {copiedType === "tukar_excel" ? (
+                  <Check className="w-3.5 h-3.5" />
+                ) : (
+                  <Copy className="w-3.5 h-3.5" />
+                )}
+                {copiedType === "tukar_excel" ? "Tersalin!" : "Copy Tabel Tukar (Excel)"}
+              </button>
+
+              <div className="relative">
+                <Search className="w-4 h-4 text-slate-400 absolute left-3 top-1/2 -translate-y-1/2" />
+                <input
+                  type="text"
+                  value={searchTukarLog}
+                  onChange={(e) => setSearchTukarLog(e.target.value)}
+                  placeholder="Cari pemohon, NIM, hari, status..."
+                  className="w-full sm:w-60 border border-slate-200 focus:border-indigo-500 outline-none rounded-xl pl-9 pr-3 py-2 text-xs font-medium bg-slate-50"
+                />
+              </div>
+            </div>
+          </div>
+
+          <div className="overflow-x-auto">
+            <table className="w-full text-sm text-left">
+              <thead className="bg-slate-50 text-slate-500 text-xs uppercase">
+                <tr>
+                  <th className="p-3.5">Waktu</th>
+                  <th className="p-3.5">Pengaju (Pemohon)</th>
+                  <th className="p-3.5">Rekan Tujuan</th>
+                  <th className="p-3.5">Pertukaran Hari</th>
+                  <th className="p-3.5">Alasan</th>
+                  <th className="p-3.5">Status</th>
+                </tr>
+              </thead>
+              <tbody className="divide-y divide-slate-100">
+                {filteredTukarList.length === 0 ? (
+                  <tr>
+                    <td colSpan={6} className="p-8 text-center text-xs text-slate-400">
+                      Belum ada riwayat pengajuan tukar jadwal.
+                    </td>
+                  </tr>
+                ) : (
+                  filteredTukarList.map((t) => (
+                    <tr key={t.id} className="hover:bg-slate-50/80 transition">
+                      <td className="p-3.5 whitespace-nowrap text-xs font-mono text-slate-500">
+                        {format(new Date(t.createdAt), "dd/MM/yyyy HH:mm")}
+                      </td>
+                      <td className="p-3.5">
+                        <div className="font-bold text-slate-900">{t.pemohon.nama}</div>
+                        <div className="text-[11px] text-slate-400">
+                          {t.pemohon.nim} • {t.pemohon.divisi}
+                        </div>
+                      </td>
+                      <td className="p-3.5">
+                        <div className="font-bold text-slate-900">{t.tujuan.nama}</div>
+                        <div className="text-[11px] text-slate-400">
+                          {t.tujuan.nim} • {t.tujuan.divisi}
+                        </div>
+                      </td>
+                      <td className="p-3.5 whitespace-nowrap text-xs font-bold text-indigo-700">
+                        {t.hariPemohon} ↔ {t.hariTujuan}
+                      </td>
+                      <td className="p-3.5 text-xs text-slate-600 max-w-xs">{t.alasan}</td>
+                      <td className="p-3.5">
+                        <span
+                          className={`px-2.5 py-1 rounded-full text-[11px] font-bold uppercase ${
+                            t.status === "pending"
+                              ? "bg-amber-100 text-amber-800"
+                              : t.status === "disetujui"
+                              ? "bg-emerald-100 text-emerald-700"
+                              : "bg-rose-100 text-rose-700"
+                          }`}
+                        >
+                          {t.status}
+                        </span>
                       </td>
                     </tr>
                   ))

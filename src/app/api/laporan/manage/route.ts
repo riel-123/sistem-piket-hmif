@@ -1,0 +1,91 @@
+import { NextRequest, NextResponse } from "next/server";
+import prisma from "@/lib/prisma";
+
+async function verifyAdmin(adminId: number) {
+  if (!adminId) return false;
+  const admin = await prisma.user.findUnique({ where: { id: Number(adminId) } });
+  return Boolean(admin && String(admin.role).toLowerCase() === "admin");
+}
+
+// CREATE / UPDATE: Tambah atau ubah status presensi pengurus pada tanggal tertentu
+export async function POST(req: NextRequest) {
+  try {
+    const { adminId, userId, tanggal, status, waktuLapor, jenisIzin, alasanIzin } =
+      await req.json();
+
+    if (!(await verifyAdmin(adminId))) {
+      return NextResponse.json({ error: "Akses ditolak. Khusus Admin." }, { status: 403 });
+    }
+
+    const uId = Number(userId);
+    if (!uId || !tanggal || !["hadir", "izin", "alfa"].includes(status)) {
+      return NextResponse.json(
+        { error: "Pilih pengurus, tanggal, dan status (Hadir/Izin/Alfa) dengan benar." },
+        { status: 400 }
+      );
+    }
+
+    const existing = await prisma.presensi.findFirst({
+      where: { userId: uId, tanggal: String(tanggal) },
+    });
+
+    const payload = {
+      status: status as "hadir" | "izin" | "alfa",
+      waktuLapor: waktuLapor && String(waktuLapor).trim() ? String(waktuLapor).trim() : "Admin",
+      jenisIzin: status === "izin" ? String(jenisIzin || "Izin Admin") : null,
+      alasanIzin: status === "izin" ? String(alasanIzin || "Diinput manual oleh Admin") : null,
+      checklistTugas: status === "hadir" ? ["Dikonfirmasi oleh Admin"] : [],
+    };
+
+    if (existing) {
+      await prisma.presensi.update({
+        where: { id: existing.id },
+        data: payload,
+      });
+    } else {
+      await prisma.presensi.create({
+        data: {
+          userId: uId,
+          tanggal: String(tanggal),
+          ...payload,
+        },
+      });
+    }
+
+    return NextResponse.json({
+      message: `Catatan kehadiran tanggal ${tanggal} berhasil disimpan sebagai ${status.toUpperCase()}!`,
+    });
+  } catch (error) {
+    console.error("Error POST /api/laporan/manage:", error);
+    return NextResponse.json({ error: "Gagal menyimpan data kehadiran." }, { status: 500 });
+  }
+}
+
+// DELETE: Hapus catatan presensi tertentu dari database (reset status hari tersebut)
+export async function DELETE(req: NextRequest) {
+  try {
+    const { searchParams } = new URL(req.url);
+    const adminId = Number(searchParams.get("adminId"));
+    const userId = Number(searchParams.get("userId"));
+    const tanggal = searchParams.get("tanggal");
+
+    if (!(await verifyAdmin(adminId))) {
+      return NextResponse.json({ error: "Akses ditolak. Khusus Admin." }, { status: 403 });
+    }
+
+    if (!userId || !tanggal) {
+      return NextResponse.json({ error: "Parameter userId dan tanggal wajib ada." }, { status: 400 });
+    }
+
+    await prisma.presensi.deleteMany({
+      where: { userId, tanggal },
+    });
+
+    return NextResponse.json({
+      message: `Catatan presensi pada tanggal ${tanggal} berhasil dihapus/direset.`,
+    });
+  } catch (error) {
+    console.error("Error DELETE /api/laporan/manage:", error);
+    return NextResponse.json({ error: "Gagal menghapus catatan presensi." }, { status: 500 });
+  }
+}

@@ -21,6 +21,10 @@ import {
   Search,
   ArrowLeftRight,
   UserPlus,
+  Pencil,
+  Trash2,
+  PlusCircle,
+  UserCog,
 } from "lucide-react";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
@@ -77,16 +81,31 @@ export default function LaporanPage() {
   const [allTukarList, setAllTukarList] = useState<any[]>([]);
   const [searchTukarLog, setSearchTukarLog] = useState<string>("");
 
-  // 4. State MODAL TAMBAH ANGGOTA BARU
-  const [showAddUserModal, setShowAddUserModal] = useState(false);
-  const [newNim, setNewNim] = useState("");
-  const [newNama, setNewNama] = useState("");
-  const [newDivisi, setNewDivisi] = useState(DEPARTEMEN_HMIF[4]);
-  const [newPassword, setNewPassword] = useState("hmif2026");
-  const [newRole, setNewRole] = useState<"pengurus" | "admin">("pengurus");
-  const [newHari, setNewHari] = useState("Senin");
-  const [addingUser, setAddingUser] = useState(false);
-  const [addUserErr, setAddUserErr] = useState("");
+  // 4. State CRUD ANGGOTA (Daftar, Tambah, Edit, Hapus)
+  const [allMembers, setAllMembers] = useState<any[]>([]);
+  const [showMembersDrawer, setShowMembersDrawer] = useState(false);
+  const [searchMemberQuery, setSearchMemberQuery] = useState("");
+  const [showUserFormModal, setShowUserFormModal] = useState(false);
+  const [editingUser, setEditingUser] = useState<any | null>(null);
+  const [formNim, setFormNim] = useState("");
+  const [formNama, setFormNama] = useState("");
+  const [formDivisi, setFormDivisi] = useState(DEPARTEMEN_HMIF[0]);
+  const [formPassword, setFormPassword] = useState("hmif2026");
+  const [formRole, setFormRole] = useState<"pengurus" | "admin">("pengurus");
+  const [formHari, setFormHari] = useState("Senin");
+  const [savingUser, setSavingUser] = useState(false);
+  const [userFormErr, setUserFormErr] = useState("");
+
+  // 5. State CRUD REKAP KEHADIRAN (Tambah/Edit Presensi Manual)
+  const [showPresensiModal, setShowPresensiModal] = useState(false);
+  const [presUserId, setPresUserId] = useState<string>("");
+  const [presTanggal, setPresTanggal] = useState<string>("");
+  const [presStatus, setPresStatus] = useState<"hadir" | "izin" | "alfa">("hadir");
+  const [presWaktu, setPresWaktu] = useState<string>("08:00");
+  const [presJenisIzin, setPresJenisIzin] = useState<string>("Sakit");
+  const [presAlasanIzin, setPresAlasanIzin] = useState<string>("");
+  const [savingPresensi, setSavingPresensi] = useState(false);
+  const [presensiErr, setPresensiErr] = useState("");
 
   const [previewModal, setPreviewModal] = useState<any | null>(null);
   const [copiedType, setCopiedType] = useState<string | null>(null);
@@ -98,6 +117,14 @@ export default function LaporanPage() {
   const [shuffling, setShuffling] = useState(false);
   const [updatingUserId, setUpdatingUserId] = useState<number | null>(null);
   const [shuffleMsg, setShuffleMsg] = useState<{ type: "ok" | "err"; text: string } | null>(null);
+
+  const loadAllMembers = () => {
+    fetch("/api/user")
+      .then((res) => res.json())
+      .then((data) => {
+        setAllMembers(data.users || []);
+      });
+  };
 
   const loadJadwalStatus = () => {
     fetch("/api/jadwal/acak")
@@ -135,6 +162,8 @@ export default function LaporanPage() {
     setLogDate(todayFormatted);
     setRekapDate(todayFormatted);
     setRekapMonth(todayFormatted.slice(0, 7));
+    setPresTanggal(todayFormatted);
+    loadAllMembers();
     loadJadwalStatus();
     loadLaporanTukar();
   }, [router]);
@@ -182,43 +211,176 @@ export default function LaporanPage() {
     fetchRekapKehadiran();
   }, [isAuthorized, rekapMode, rekapDate, rekapMonth]);
 
-  const handleTambahAnggota = async (e: React.FormEvent) => {
+  // =========================================================================
+  // HANDLER CRUD ANGGOTA (CREATE, UPDATE, DELETE)
+  // =========================================================================
+  const openCreateUserModal = () => {
+    setEditingUser(null);
+    setFormNim("");
+    setFormNama("");
+    setFormDivisi(DEPARTEMEN_HMIF[0]);
+    setFormPassword("hmif2026");
+    setFormRole("pengurus");
+    setFormHari("Senin");
+    setUserFormErr("");
+    setShowUserFormModal(true);
+  };
+
+  const openEditUserModal = (member: any) => {
+    setEditingUser(member);
+    setFormNim(member.nim);
+    setFormNama(member.nama);
+    setFormDivisi(member.divisi);
+    setFormPassword(member.password || "");
+    setFormRole(String(member.role).toLowerCase() === "admin" ? "admin" : "pengurus");
+    setFormHari(member.hari && member.hari !== "-" ? member.hari : "Senin");
+    setUserFormErr("");
+    setShowUserFormModal(true);
+  };
+
+  const handleSaveUser = async (e: React.FormEvent) => {
     e.preventDefault();
     if (!adminUser) return;
-    setAddUserErr("");
-    setAddingUser(true);
+    setUserFormErr("");
+    setSavingUser(true);
 
+    const isEdit = Boolean(editingUser);
     const res = await fetch("/api/user", {
-      method: "POST",
+      method: isEdit ? "PATCH" : "POST",
       headers: { "Content-Type": "application/json" },
       body: JSON.stringify({
         adminId: adminUser.id,
-        nim: newNim,
-        nama: newNama,
-        divisi: newDivisi,
-        password: newPassword,
-        role: newRole,
-        hari: newHari,
+        ...(isEdit ? { userId: editingUser.id } : {}),
+        nim: formNim,
+        nama: formNama,
+        divisi: formDivisi,
+        password: formPassword,
+        role: formRole,
+        hari: formHari,
       }),
     });
-    const resData = await res.json();
-    setAddingUser(false);
+
+    const data = await res.json();
+    setSavingUser(false);
 
     if (!res.ok) {
-      setAddUserErr(resData.error);
+      setUserFormErr(data.error);
     } else {
-      setShuffleMsg({ type: "ok", text: resData.message });
-      setNewNim("");
-      setNewNama("");
-      setNewPassword("hmif2026");
-      setNewRole("pengurus");
-      setShowAddUserModal(false);
+      setShuffleMsg({ type: "ok", text: data.message });
+      setShowUserFormModal(false);
+      loadAllMembers();
       loadJadwalStatus();
       fetchDetailLogHarian();
       fetchRekapKehadiran();
     }
   };
 
+  const handleDeleteUser = async (member: any) => {
+    if (!adminUser) return;
+    const ok = window.confirm(
+      `Yakin ingin menghapus anggota "${member.nama}" (${member.nim})? Seluruh riwayat presensi dan tukar jadwalnya juga akan terhapus.`
+    );
+    if (!ok) return;
+
+    const res = await fetch(`/api/user?adminId=${adminUser.id}&userId=${member.id}`, {
+      method: "DELETE",
+    });
+    const data = await res.json();
+
+    if (!res.ok) {
+      setShuffleMsg({ type: "err", text: data.error });
+    } else {
+      setShuffleMsg({ type: "ok", text: data.message });
+      loadAllMembers();
+      loadJadwalStatus();
+      fetchDetailLogHarian();
+      fetchRekapKehadiran();
+    }
+  };
+
+  // =========================================================================
+  // HANDLER CRUD REKAP KEHADIRAN (CREATE/UPDATE & DELETE)
+  // =========================================================================
+  const openPresensiModal = (prefill?: {
+    userId?: number;
+    tanggal?: string;
+    status?: string;
+    waktuLapor?: string;
+    jenisIzin?: string;
+    alasanIzin?: string;
+  }) => {
+    setPresensiErr("");
+    setPresUserId(prefill?.userId ? String(prefill.userId) : allMembers[0]?.id ? String(allMembers[0].id) : "");
+    setPresTanggal(prefill?.tanggal || logDate || getTodayWibFormatted());
+    setPresStatus(
+      prefill?.status === "izin" || prefill?.status === "alfa" || prefill?.status === "hadir"
+        ? prefill.status
+        : "hadir"
+    );
+    setPresWaktu(prefill?.waktuLapor && prefill.waktuLapor !== "-" ? prefill.waktuLapor : "08:00");
+    setPresJenisIzin(prefill?.jenisIzin || "Sakit");
+    setPresAlasanIzin(prefill?.alasanIzin || "");
+    setShowPresensiModal(true);
+  };
+
+  const handleSavePresensi = async (e: React.FormEvent) => {
+    e.preventDefault();
+    if (!adminUser) return;
+    setPresensiErr("");
+    setSavingPresensi(true);
+
+    const res = await fetch("/api/laporan/manage", {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({
+        adminId: adminUser.id,
+        userId: Number(presUserId),
+        tanggal: presTanggal,
+        status: presStatus,
+        waktuLapor: presWaktu,
+        jenisIzin: presJenisIzin,
+        alasanIzin: presAlasanIzin,
+      }),
+    });
+
+    const data = await res.json();
+    setSavingPresensi(false);
+
+    if (!res.ok) {
+      setPresensiErr(data.error);
+    } else {
+      setShuffleMsg({ type: "ok", text: data.message });
+      setShowPresensiModal(false);
+      fetchDetailLogHarian();
+      fetchRekapKehadiran();
+    }
+  };
+
+  const handleDeletePresensi = async (log: any) => {
+    if (!adminUser) return;
+    const ok = window.confirm(
+      `Reset/hapus catatan presensi milik "${log.nama}" pada tanggal ${log.tanggal}?`
+    );
+    if (!ok) return;
+
+    const res = await fetch(
+      `/api/laporan/manage?adminId=${adminUser.id}&userId=${log.userId}&tanggal=${log.tanggal}`,
+      { method: "DELETE" }
+    );
+    const data = await res.json();
+
+    if (!res.ok) {
+      setShuffleMsg({ type: "err", text: data.error });
+    } else {
+      setShuffleMsg({ type: "ok", text: data.message });
+      fetchDetailLogHarian();
+      fetchRekapKehadiran();
+    }
+  };
+
+  // =========================================================================
+  // HANDLER ACAK & UBAH JADWAL MINGGUAN
+  // =========================================================================
   const handleAcakJadwal = async () => {
     if (!adminUser || !canShuffle) return;
     setShuffleMsg(null);
@@ -237,6 +399,7 @@ export default function LaporanPage() {
     } else {
       setShuffleMsg({ type: "ok", text: resData.message });
       setJadwalList(resData.users || []);
+      loadAllMembers();
       fetchDetailLogHarian();
       fetchRekapKehadiran();
     }
@@ -264,12 +427,13 @@ export default function LaporanPage() {
     } else {
       setShuffleMsg({ type: "ok", text: resData.message });
       setJadwalList(resData.users || []);
+      loadAllMembers();
       fetchDetailLogHarian();
       fetchRekapKehadiran();
     }
   };
 
-  // SHARE WHATSAPP: JADWAL PER HARI & PER DEPARTEMEN
+  // SHARE WHATSAPP & COPY EXCEL
   const copyJadwalWAPerHari = () => {
     const perHariLines = HARI_ORDER.map((hari) => {
       const anggotaHariIni = jadwalList.filter((u) => u.hari === hari);
@@ -311,7 +475,6 @@ export default function LaporanPage() {
     setTimeout(() => setCopiedType(null), 2500);
   };
 
-  // COPY EXCEL (TSV)
   const copyRekapKehadiranExcel = () => {
     const header = [
       "No",
@@ -333,16 +496,7 @@ export default function LaporanPage() {
             }`
         )
         .join("; ");
-      return [
-        idx + 1,
-        u.nim,
-        u.nama,
-        u.divisi,
-        u.hadir,
-        u.izin,
-        u.alfa,
-        rincian || "-",
-      ].join("\t");
+      return [idx + 1, u.nim, u.nama, u.divisi, u.hadir, u.izin, u.alfa, rincian || "-"].join("\t");
     });
 
     navigator.clipboard.writeText([header, ...rows].join("\n"));
@@ -431,7 +585,6 @@ export default function LaporanPage() {
   // DOWNLOAD FILE EXCEL (.XLSX)
   const exportExcelPerHari = () => {
     const wb = XLSX.utils.book_new();
-
     const rowsPerHari: any[] = [];
     HARI_ORDER.forEach((hari) => {
       const members = jadwalList.filter((u) => u.hari === hari);
@@ -586,13 +739,25 @@ export default function LaporanPage() {
     );
   });
 
+  const filteredMembers = allMembers.filter((m) => {
+    const q = searchMemberQuery.trim().toLowerCase();
+    if (!q) return true;
+    return (
+      m.nama.toLowerCase().includes(q) ||
+      String(m.nim).toLowerCase().includes(q) ||
+      m.divisi.toLowerCase().includes(q) ||
+      m.hari.toLowerCase().includes(q) ||
+      m.role.toLowerCase().includes(q)
+    );
+  });
+
   const daftarDepartemenTampil = Array.from(
     new Set([...DEPARTEMEN_HMIF, ...jadwalList.map((u) => u.divisi)])
   );
 
   return (
     <div className="min-h-screen bg-stone-100/90 text-stone-900 pb-12">
-      {/* Header Banner — Nuansa Oranye Hangat Kalem (Terracotta / Burnt Orange) */}
+      {/* Header Banner — Nuansa Oranye Kalem */}
       <div className="bg-gradient-to-r from-orange-800 via-orange-700 to-amber-700 text-white">
         <div className="max-w-6xl mx-auto px-4 sm:px-6 py-7 flex flex-col lg:flex-row lg:justify-between lg:items-center gap-4">
           <div>
@@ -606,20 +771,26 @@ export default function LaporanPage() {
               Panel Admin & Laporan Piket
             </h1>
             <p className="text-xs sm:text-sm text-orange-100/90 mt-1">
-              Operasional Senin – Jumat (07.00 – 17.00 WIB) • Foto bukti otomatis terhapus setiap ganti hari
+              Operasional Senin – Jumat (07.00 – 17.00 WIB) • Kelola data anggota & rekap kehadiran
             </p>
           </div>
 
           <div className="flex flex-wrap gap-2">
             <button
               type="button"
-              onClick={() => {
-                setAddUserErr("");
-                setShowAddUserModal(true);
-              }}
+              onClick={() => setShowMembersDrawer((prev) => !prev)}
               className="bg-amber-100 hover:bg-amber-200 text-orange-950 px-3.5 py-2.5 rounded-xl text-xs font-extrabold flex items-center gap-1.5 shadow-md transition"
             >
-              <UserPlus className="w-4 h-4 text-orange-800" /> + Tambah Anggota
+              <UserCog className="w-4 h-4 text-orange-800" />
+              {showMembersDrawer ? "Tutup Data Anggota" : `Kelola Anggota (${allMembers.length})`}
+            </button>
+
+            <button
+              type="button"
+              onClick={openCreateUserModal}
+              className="bg-white text-orange-900 hover:bg-orange-50 px-3.5 py-2.5 rounded-xl text-xs font-extrabold flex items-center gap-1.5 shadow-md transition"
+            >
+              <UserPlus className="w-4 h-4 text-orange-700" /> + Tambah Anggota
             </button>
 
             <button
@@ -627,27 +798,138 @@ export default function LaporanPage() {
               className="bg-emerald-700 hover:bg-emerald-600 text-white px-3.5 py-2.5 rounded-xl text-xs font-bold flex items-center gap-1.5 shadow-md transition"
             >
               {copiedType === "rekap_excel" ? <Check className="w-4 h-4" /> : <Copy className="w-4 h-4" />}
-              {copiedType === "rekap_excel" ? "Tersalin (Ctrl+V di Excel)!" : "Copy Tabel Rekap (Excel)"}
+              {copiedType === "rekap_excel" ? "Tersalin!" : "Copy Rekap (Excel)"}
             </button>
 
             <button
               onClick={exportExcelPerHari}
-              className="bg-white text-orange-900 hover:bg-orange-50 px-3.5 py-2.5 rounded-xl text-xs font-bold flex items-center gap-1.5 shadow-md transition"
+              className="bg-orange-950/60 hover:bg-orange-950/80 text-orange-50 border border-orange-300/25 px-3.5 py-2.5 rounded-xl text-xs font-bold flex items-center gap-1.5 shadow-md transition"
             >
-              <Download className="w-4 h-4" /> Download .XLSX (Per Hari)
+              <Download className="w-4 h-4" /> .XLSX (Hari)
             </button>
 
             <button
               onClick={exportExcelPerDepartemen}
               className="bg-orange-950/60 hover:bg-orange-950/80 text-orange-50 border border-orange-300/25 px-3.5 py-2.5 rounded-xl text-xs font-bold flex items-center gap-1.5 shadow-md transition"
             >
-              <Download className="w-4 h-4" /> Download .XLSX (Per Dept)
+              <Download className="w-4 h-4" /> .XLSX (Dept)
             </button>
           </div>
         </div>
       </div>
 
       <div className="max-w-6xl mx-auto px-4 sm:px-6 -mt-4 space-y-6">
+        {shuffleMsg && (
+          <div
+            className={`p-3.5 rounded-2xl text-xs sm:text-sm font-semibold border shadow-sm ${
+              shuffleMsg.type === "ok"
+                ? "bg-emerald-50 border-emerald-200 text-emerald-800"
+                : "bg-rose-50 border-rose-200 text-rose-700"
+            }`}
+          >
+            {shuffleMsg.text}
+          </div>
+        )}
+
+        {/* ============================================================== */}
+        {/* PANEL CRUD DATA ANGGOTA (CREATE, READ, UPDATE, DELETE)         */}
+        {/* ============================================================== */}
+        {showMembersDrawer && (
+          <div className="bg-white rounded-2xl border border-orange-200 shadow-md overflow-hidden">
+            <div className="p-4 sm:p-5 bg-orange-50/70 border-b border-orange-200/80 flex flex-col sm:flex-row sm:items-center justify-between gap-3">
+              <div>
+                <h2 className="font-extrabold text-stone-900 text-base">
+                  Database Anggota & Pengurus ({filteredMembers.length} Orang)
+                </h2>
+                <p className="text-xs text-stone-500">
+                  Tambah, ubah NIM/nama/departemen/password/role, atau hapus anggota pengurus
+                </p>
+              </div>
+
+              <div className="flex flex-wrap items-center gap-2">
+                <div className="relative">
+                  <Search className="w-4 h-4 text-stone-400 absolute left-3 top-1/2 -translate-y-1/2" />
+                  <input
+                    type="text"
+                    value={searchMemberQuery}
+                    onChange={(e) => setSearchMemberQuery(e.target.value)}
+                    placeholder="Cari NIM, nama, dept..."
+                    className="w-full sm:w-56 border border-stone-200 focus:border-orange-700 outline-none rounded-xl pl-9 pr-3 py-2 text-xs font-medium bg-white"
+                  />
+                </div>
+
+                <button
+                  type="button"
+                  onClick={openCreateUserModal}
+                  className="bg-orange-800 hover:bg-orange-900 text-white px-3.5 py-2 rounded-xl text-xs font-bold flex items-center gap-1.5 transition"
+                >
+                  <UserPlus className="w-3.5 h-3.5" /> Tambah Baru
+                </button>
+              </div>
+            </div>
+
+            <div className="overflow-x-auto max-h-96">
+              <table className="w-full text-sm text-left">
+                <thead className="bg-stone-50 text-stone-500 text-xs uppercase sticky top-0">
+                  <tr>
+                    <th className="p-3.5">NIM</th>
+                    <th className="p-3.5">Nama Lengkap</th>
+                    <th className="p-3.5">Departemen</th>
+                    <th className="p-3.5">Hari Piket</th>
+                    <th className="p-3.5">Password</th>
+                    <th className="p-3.5">Role</th>
+                    <th className="p-3.5 text-right">Aksi</th>
+                  </tr>
+                </thead>
+                <tbody className="divide-y divide-stone-100">
+                  {filteredMembers.map((m) => (
+                    <tr key={m.id} className="hover:bg-orange-50/30 transition">
+                      <td className="p-3.5 font-mono text-xs text-stone-700">{m.nim}</td>
+                      <td className="p-3.5 font-bold text-stone-900">{m.nama}</td>
+                      <td className="p-3.5 text-xs font-semibold text-orange-800">{m.divisi}</td>
+                      <td className="p-3.5">
+                        <span className="px-2.5 py-1 rounded-lg bg-stone-100 text-stone-700 font-bold text-xs">
+                          {m.hari}
+                        </span>
+                      </td>
+                      <td className="p-3.5 font-mono text-xs text-stone-500">{m.password}</td>
+                      <td className="p-3.5">
+                        <span
+                          className={`px-2 py-0.5 rounded-full text-[10px] font-bold uppercase ${
+                            String(m.role).toLowerCase() === "admin"
+                              ? "bg-orange-100 text-orange-800"
+                              : "bg-stone-100 text-stone-600"
+                          }`}
+                        >
+                          {m.role}
+                        </span>
+                      </td>
+                      <td className="p-3.5 text-right whitespace-nowrap">
+                        <div className="inline-flex items-center gap-1.5">
+                          <button
+                            type="button"
+                            onClick={() => openEditUserModal(m)}
+                            className="bg-amber-50 hover:bg-amber-100 text-amber-800 border border-amber-200 px-2.5 py-1.5 rounded-lg text-xs font-bold inline-flex items-center gap-1 transition"
+                          >
+                            <Pencil className="w-3 h-3" /> Edit
+                          </button>
+                          <button
+                            type="button"
+                            onClick={() => handleDeleteUser(m)}
+                            className="bg-rose-50 hover:bg-rose-100 text-rose-700 border border-rose-200 px-2.5 py-1.5 rounded-lg text-xs font-bold inline-flex items-center gap-1 transition"
+                          >
+                            <Trash2 className="w-3 h-3" /> Hapus
+                          </button>
+                        </div>
+                      </td>
+                    </tr>
+                  ))}
+                </tbody>
+              </table>
+            </div>
+          </div>
+        )}
+
         {/* PANEL ACAK & EDIT MANUAL JADWAL PER HARI / DEPARTEMEN (SHARE WA) */}
         <div className="bg-white rounded-2xl border border-stone-200/90 shadow-sm p-5 sm:p-6 space-y-5">
           <div className="flex flex-col lg:flex-row lg:items-center justify-between gap-4">
@@ -711,19 +993,6 @@ export default function LaporanPage() {
             </div>
           </div>
 
-          {shuffleMsg && (
-            <div
-              className={`p-3 rounded-xl text-xs font-semibold border ${
-                shuffleMsg.type === "ok"
-                  ? "bg-emerald-50 border-emerald-200 text-emerald-800"
-                  : "bg-rose-50 border-rose-200 text-rose-700"
-              }`}
-            >
-              {shuffleMsg.text}
-            </div>
-          )}
-
-          {/* Switcher Tampilan Per Hari vs Per Departemen */}
           <div className="flex items-center justify-between border-t border-stone-100 pt-4">
             <div className="grid grid-cols-2 bg-stone-100 p-1 rounded-xl">
               <button
@@ -859,7 +1128,7 @@ export default function LaporanPage() {
         </div>
 
         {/* ============================================================== */}
-        {/* POSISI ATAS: DETAIL LOG KEHADIRAN HARIAN (KHUSUS HARIAN SAJA)   */}
+        {/* DETAIL LOG KEHADIRAN HARIAN + CRUD PRESENSI                    */}
         {/* ============================================================== */}
         <div className="space-y-4">
           <div className="grid grid-cols-2 lg:grid-cols-4 gap-3 sm:gap-4">
@@ -911,11 +1180,19 @@ export default function LaporanPage() {
                   Detail Log Kehadiran Harian ({filteredDetailLogs.length} Catatan)
                 </span>
                 <span className="text-[11px] text-stone-400">
-                  *Khusus monitoring harian • Foto bukti berlaku 1 hari dan otomatis terhapus saat berganti hari
+                  Admin dapat menambah, mengubah status, atau menghapus log kehadiran anggota
                 </span>
               </div>
 
               <div className="flex flex-col sm:flex-row items-stretch sm:items-center gap-2">
+                <button
+                  type="button"
+                  onClick={() => openPresensiModal({ tanggal: logDate })}
+                  className="bg-orange-800 hover:bg-orange-900 text-white px-3 py-2 rounded-xl text-xs font-bold flex items-center justify-center gap-1.5 transition shrink-0"
+                >
+                  <PlusCircle className="w-3.5 h-3.5" /> + Input Kehadiran
+                </button>
+
                 <button
                   type="button"
                   onClick={copyLogHarianExcel}
@@ -926,7 +1203,7 @@ export default function LaporanPage() {
                   ) : (
                     <Copy className="w-3.5 h-3.5" />
                   )}
-                  {copiedType === "log_excel" ? "Tersalin!" : "Copy Tabel Log (Excel)"}
+                  {copiedType === "log_excel" ? "Tersalin!" : "Copy Log"}
                 </button>
 
                 <div className="relative">
@@ -935,8 +1212,8 @@ export default function LaporanPage() {
                     type="text"
                     value={searchLog}
                     onChange={(e) => setSearchLog(e.target.value)}
-                    placeholder="Cari nama, NIM, dept, status..."
-                    className="w-full sm:w-52 border border-stone-200 focus:border-orange-600 outline-none rounded-xl pl-9 pr-3 py-2 text-xs font-medium bg-stone-50"
+                    placeholder="Cari nama, NIM, status..."
+                    className="w-full sm:w-44 border border-stone-200 focus:border-orange-600 outline-none rounded-xl pl-9 pr-3 py-2 text-xs font-medium bg-stone-50"
                   />
                 </div>
 
@@ -954,7 +1231,7 @@ export default function LaporanPage() {
 
             {filteredDetailLogs.length === 0 ? (
               <div className="p-10 text-center text-sm text-stone-400">
-                Tidak ada log piket yang sesuai pada tanggal ini (Sabtu & Minggu libur).
+                Tidak ada log piket pada tanggal ini. Gunakan tombol <strong>+ Input Kehadiran</strong> jika ingin mencatat presensi manual.
               </div>
             ) : (
               <div className="overflow-x-auto">
@@ -965,7 +1242,8 @@ export default function LaporanPage() {
                       <th className="p-3.5">Pengurus</th>
                       <th className="p-3.5">Status</th>
                       <th className="p-3.5">Jam</th>
-                      <th className="p-3.5">Dokumentasi (Hari Ini)</th>
+                      <th className="p-3.5">Dokumentasi</th>
+                      <th className="p-3.5 text-right">Kelola</th>
                     </tr>
                   </thead>
                   <tbody className="divide-y divide-stone-100">
@@ -1004,13 +1282,27 @@ export default function LaporanPage() {
                             >
                               <Eye className="w-3.5 h-3.5" /> Lihat Bukti
                             </button>
-                          ) : log.status === "hadir" || log.status === "izin" ? (
-                            <span className="text-stone-400 text-[11px] italic">
-                              Foto terhapus (hari sebelumnya)
-                            </span>
                           ) : (
                             <span className="text-stone-400 text-xs">-</span>
                           )}
+                        </td>
+                        <td className="p-3.5 text-right whitespace-nowrap">
+                          <div className="inline-flex items-center gap-1.5">
+                            <button
+                              type="button"
+                              onClick={() => openPresensiModal(log)}
+                              className="bg-amber-50 hover:bg-amber-100 text-amber-800 border border-amber-200 px-2.5 py-1.5 rounded-lg text-xs font-bold inline-flex items-center gap-1 transition"
+                            >
+                              <Pencil className="w-3 h-3" /> Edit
+                            </button>
+                            <button
+                              type="button"
+                              onClick={() => handleDeletePresensi(log)}
+                              className="bg-rose-50 hover:bg-rose-100 text-rose-700 border border-rose-200 px-2.5 py-1.5 rounded-lg text-xs font-bold inline-flex items-center gap-1 transition"
+                            >
+                              <Trash2 className="w-3 h-3" /> Reset
+                            </button>
+                          </div>
                         </td>
                       </tr>
                     ))}
@@ -1022,7 +1314,7 @@ export default function LaporanPage() {
         </div>
 
         {/* ============================================================== */}
-        {/* POSISI BAWAH: REKAP KEHADIRAN PER PENGURUS (MINGGUAN / BULANAN) */}
+        {/* REKAP KEHADIRAN PER PENGURUS (MINGGUAN / BULANAN)              */}
         {/* ============================================================== */}
         <div className="bg-white rounded-2xl border border-stone-200/90 shadow-sm overflow-hidden">
           <div className="p-4 sm:p-5 border-b border-stone-100 flex flex-col lg:flex-row lg:items-center justify-between gap-3">
@@ -1031,7 +1323,7 @@ export default function LaporanPage() {
                 Rekap Kehadiran Per Pengurus ({rekapMode === "mingguan" ? "Mingguan" : "Bulanan"})
               </h2>
               <p className="text-xs text-stone-400">
-                Menampilkan total kehadiran tiap anggota beserta rincian hari piketnya
+                Klik badge hari piket pada baris anggota untuk langsung mengedit status kehadirannya
               </p>
             </div>
 
@@ -1046,7 +1338,7 @@ export default function LaporanPage() {
                 ) : (
                   <Copy className="w-3.5 h-3.5" />
                 )}
-                Copy Tabel Rekap (Excel)
+                Copy Rekap (Excel)
               </button>
 
               <div className="relative">
@@ -1056,7 +1348,7 @@ export default function LaporanPage() {
                   value={searchRekap}
                   onChange={(e) => setSearchRekap(e.target.value)}
                   placeholder="Cari nama, NIM, dept..."
-                  className="w-full sm:w-48 border border-stone-200 focus:border-orange-600 outline-none rounded-xl pl-9 pr-3 py-2 text-xs font-medium bg-stone-50"
+                  className="w-full sm:w-44 border border-stone-200 focus:border-orange-600 outline-none rounded-xl pl-9 pr-3 py-2 text-xs font-medium bg-stone-50"
                 />
               </div>
 
@@ -1115,12 +1407,13 @@ export default function LaporanPage() {
                   <th className="p-3.5 text-center text-amber-700">Izin</th>
                   <th className="p-3.5 text-center text-rose-700">Alfa</th>
                   <th className="p-3.5">Hari Piket / Kehadiran</th>
+                  <th className="p-3.5 text-right">Aksi</th>
                 </tr>
               </thead>
               <tbody className="divide-y divide-stone-100">
                 {filteredRekapUser.length === 0 ? (
                   <tr>
-                    <td colSpan={5} className="p-8 text-center text-xs text-stone-400">
+                    <td colSpan={6} className="p-8 text-center text-xs text-stone-400">
                       Tidak ada pengurus yang cocok dengan kata kunci pencarian.
                     </td>
                   </tr>
@@ -1146,9 +1439,18 @@ export default function LaporanPage() {
                         {u.riwayatHari && u.riwayatHari.length > 0 ? (
                           <div className="flex flex-wrap gap-1.5">
                             {u.riwayatHari.map((r: any, i: number) => (
-                              <span
+                              <button
                                 key={i}
-                                className={`px-2.5 py-1 rounded-lg text-[11px] font-bold border ${
+                                type="button"
+                                onClick={() =>
+                                  openPresensiModal({
+                                    userId: u.userId,
+                                    tanggal: r.tanggal,
+                                    status: r.status,
+                                  })
+                                }
+                                title="Klik untuk edit status hari ini"
+                                className={`px-2.5 py-1 rounded-lg text-[11px] font-bold border transition hover:opacity-80 ${
                                   r.status === "hadir"
                                     ? "bg-emerald-50 border-emerald-200 text-emerald-800"
                                     : r.status === "izin"
@@ -1160,12 +1462,21 @@ export default function LaporanPage() {
                               >
                                 {r.hari} ({r.tanggal.slice(5)}) •{" "}
                                 {r.status === "belum_absen" ? "Terjadwal" : r.status.toUpperCase()}
-                              </span>
+                              </button>
                             ))}
                           </div>
                         ) : (
                           <span className="text-xs text-stone-400">Belum ada jadwal/catatan</span>
                         )}
+                      </td>
+                      <td className="p-3.5 text-right whitespace-nowrap">
+                        <button
+                          type="button"
+                          onClick={() => openPresensiModal({ userId: u.userId })}
+                          className="bg-orange-50 hover:bg-orange-100 text-orange-800 border border-orange-200 px-2.5 py-1.5 rounded-lg text-xs font-bold inline-flex items-center gap-1 transition"
+                        >
+                          <PlusCircle className="w-3 h-3" /> Input
+                        </button>
                       </td>
                     </tr>
                   ))
@@ -1284,12 +1595,12 @@ export default function LaporanPage() {
         </div>
 
         {/* ============================================================== */}
-        {/* MODAL TAMBAH ANGGOTA BARU                                      */}
+        {/* MODAL TAMBAH / EDIT ANGGOTA                                    */}
         {/* ============================================================== */}
-        {showAddUserModal && (
+        {showUserFormModal && (
           <div className="fixed inset-0 bg-stone-900/70 backdrop-blur-sm flex items-center justify-center p-4 z-50">
             <form
-              onSubmit={handleTambahAnggota}
+              onSubmit={handleSaveUser}
               className="bg-white rounded-3xl max-w-md w-full p-6 space-y-4 shadow-2xl"
             >
               <div className="flex justify-between items-start gap-2">
@@ -1297,20 +1608,22 @@ export default function LaporanPage() {
                   <span className="text-[11px] font-bold uppercase tracking-wider text-orange-700">
                     Manajemen Pengurus HMIF
                   </span>
-                  <h3 className="font-extrabold text-lg text-stone-900">Tambah Anggota Baru</h3>
+                  <h3 className="font-extrabold text-lg text-stone-900">
+                    {editingUser ? "Edit Data Anggota" : "Tambah Anggota Baru"}
+                  </h3>
                 </div>
                 <button
                   type="button"
-                  onClick={() => setShowAddUserModal(false)}
+                  onClick={() => setShowUserFormModal(false)}
                   className="w-8 h-8 rounded-full bg-stone-100 hover:bg-stone-200 flex items-center justify-center text-stone-600 font-bold"
                 >
                   ✕
                 </button>
               </div>
 
-              {addUserErr && (
+              {userFormErr && (
                 <div className="bg-rose-50 border border-rose-200 text-rose-700 text-xs p-3 rounded-xl font-semibold">
-                  {addUserErr}
+                  {userFormErr}
                 </div>
               )}
 
@@ -1320,8 +1633,8 @@ export default function LaporanPage() {
                   <input
                     type="text"
                     required
-                    value={newNim}
-                    onChange={(e) => setNewNim(e.target.value)}
+                    value={formNim}
+                    onChange={(e) => setFormNim(e.target.value)}
                     placeholder="Contoh: 2350081099"
                     className="w-full mt-1 border border-stone-200 focus:border-orange-600 outline-none rounded-xl px-3.5 py-2.5 text-sm"
                   />
@@ -1332,8 +1645,8 @@ export default function LaporanPage() {
                   <input
                     type="text"
                     required
-                    value={newNama}
-                    onChange={(e) => setNewNama(e.target.value)}
+                    value={formNama}
+                    onChange={(e) => setFormNama(e.target.value)}
                     placeholder="Nama lengkap pengurus"
                     className="w-full mt-1 border border-stone-200 focus:border-orange-600 outline-none rounded-xl px-3.5 py-2.5 text-sm"
                   />
@@ -1343,8 +1656,8 @@ export default function LaporanPage() {
                   <div>
                     <label className="text-xs font-bold text-stone-700 uppercase">Departemen</label>
                     <select
-                      value={newDivisi}
-                      onChange={(e) => setNewDivisi(e.target.value)}
+                      value={formDivisi}
+                      onChange={(e) => setFormDivisi(e.target.value)}
                       className="w-full mt-1 border border-stone-200 focus:border-orange-600 outline-none rounded-xl px-3 py-2.5 text-xs font-semibold bg-white"
                     >
                       {DEPARTEMEN_HMIF.map((dept) => (
@@ -1358,8 +1671,8 @@ export default function LaporanPage() {
                   <div>
                     <label className="text-xs font-bold text-stone-700 uppercase">Hari Piket</label>
                     <select
-                      value={newHari}
-                      onChange={(e) => setNewHari(e.target.value)}
+                      value={formHari}
+                      onChange={(e) => setFormHari(e.target.value)}
                       className="w-full mt-1 border border-stone-200 focus:border-orange-600 outline-none rounded-xl px-3 py-2.5 text-xs font-semibold bg-white"
                     >
                       {HARI_ORDER.map((hari) => (
@@ -1373,12 +1686,12 @@ export default function LaporanPage() {
 
                 <div className="grid grid-cols-2 gap-3">
                   <div>
-                    <label className="text-xs font-bold text-stone-700 uppercase">Password Awal</label>
+                    <label className="text-xs font-bold text-stone-700 uppercase">Password</label>
                     <input
                       type="text"
-                      required
-                      value={newPassword}
-                      onChange={(e) => setNewPassword(e.target.value)}
+                      required={!editingUser}
+                      value={formPassword}
+                      onChange={(e) => setFormPassword(e.target.value)}
                       className="w-full mt-1 border border-stone-200 focus:border-orange-600 outline-none rounded-xl px-3.5 py-2.5 text-xs font-mono"
                     />
                   </div>
@@ -1386,8 +1699,8 @@ export default function LaporanPage() {
                   <div>
                     <label className="text-xs font-bold text-stone-700 uppercase">Hak Akses</label>
                     <select
-                      value={newRole}
-                      onChange={(e) => setNewRole(e.target.value as "pengurus" | "admin")}
+                      value={formRole}
+                      onChange={(e) => setFormRole(e.target.value as "pengurus" | "admin")}
                       className="w-full mt-1 border border-stone-200 focus:border-orange-600 outline-none rounded-xl px-3 py-2.5 text-xs font-semibold bg-white"
                     >
                       <option value="pengurus">Pengurus Biasa</option>
@@ -1400,17 +1713,159 @@ export default function LaporanPage() {
               <div className="flex gap-2 pt-2">
                 <button
                   type="button"
-                  onClick={() => setShowAddUserModal(false)}
+                  onClick={() => setShowUserFormModal(false)}
                   className="flex-1 bg-stone-100 hover:bg-stone-200 text-stone-700 font-bold py-2.5 rounded-xl text-xs transition"
                 >
                   Batal
                 </button>
                 <button
                   type="submit"
-                  disabled={addingUser}
-                  className="flex-1 bg-orange-700 hover:bg-orange-800 disabled:bg-stone-300 text-white font-bold py-2.5 rounded-xl text-xs transition"
+                  disabled={savingUser}
+                  className="flex-1 bg-orange-800 hover:bg-orange-900 disabled:bg-stone-300 text-white font-bold py-2.5 rounded-xl text-xs transition"
                 >
-                  {addingUser ? "Menyimpan..." : "Simpan Anggota"}
+                  {savingUser ? "Menyimpan..." : editingUser ? "Simpan Perubahan" : "Simpan Anggota"}
+                </button>
+              </div>
+            </form>
+          </div>
+        )}
+
+        {/* ============================================================== */}
+        {/* MODAL INPUT / EDIT KEHADIRAN MANUAL (CRUD REKAP)               */}
+        {/* ============================================================== */}
+        {showPresensiModal && (
+          <div className="fixed inset-0 bg-stone-900/70 backdrop-blur-sm flex items-center justify-center p-4 z-50">
+            <form
+              onSubmit={handleSavePresensi}
+              className="bg-white rounded-3xl max-w-md w-full p-6 space-y-4 shadow-2xl"
+            >
+              <div className="flex justify-between items-start gap-2">
+                <div>
+                  <span className="text-[11px] font-bold uppercase tracking-wider text-orange-700">
+                    Kelola Rekap Kehadiran
+                  </span>
+                  <h3 className="font-extrabold text-lg text-stone-900">
+                    Input / Edit Status Piket
+                  </h3>
+                </div>
+                <button
+                  type="button"
+                  onClick={() => setShowPresensiModal(false)}
+                  className="w-8 h-8 rounded-full bg-stone-100 hover:bg-stone-200 flex items-center justify-center text-stone-600 font-bold"
+                >
+                  ✕
+                </button>
+              </div>
+
+              {presensiErr && (
+                <div className="bg-rose-50 border border-rose-200 text-rose-700 text-xs p-3 rounded-xl font-semibold">
+                  {presensiErr}
+                </div>
+              )}
+
+              <div className="space-y-3">
+                <div>
+                  <label className="text-xs font-bold text-stone-700 uppercase">Pengurus</label>
+                  <select
+                    required
+                    value={presUserId}
+                    onChange={(e) => setPresUserId(e.target.value)}
+                    className="w-full mt-1 border border-stone-200 focus:border-orange-600 outline-none rounded-xl px-3 py-2.5 text-xs font-semibold bg-white"
+                  >
+                    <option value="">-- Pilih Pengurus --</option>
+                    {allMembers.map((m) => (
+                      <option key={m.id} value={m.id}>
+                        {m.nama} ({m.nim} • {m.divisi})
+                      </option>
+                    ))}
+                  </select>
+                </div>
+
+                <div className="grid grid-cols-2 gap-3">
+                  <div>
+                    <label className="text-xs font-bold text-stone-700 uppercase">Tanggal</label>
+                    <input
+                      type="date"
+                      required
+                      value={presTanggal}
+                      onChange={(e) => setPresTanggal(e.target.value)}
+                      className="w-full mt-1 border border-stone-200 focus:border-orange-600 outline-none rounded-xl px-3 py-2 text-xs font-semibold"
+                    />
+                  </div>
+
+                  <div>
+                    <label className="text-xs font-bold text-stone-700 uppercase">Status</label>
+                    <select
+                      value={presStatus}
+                      onChange={(e) =>
+                        setPresStatus(e.target.value as "hadir" | "izin" | "alfa")
+                      }
+                      className="w-full mt-1 border border-stone-200 focus:border-orange-600 outline-none rounded-xl px-3 py-2 text-xs font-bold bg-white"
+                    >
+                      <option value="hadir">HADIR</option>
+                      <option value="izin">IZIN</option>
+                      <option value="alfa">ALFA</option>
+                    </select>
+                  </div>
+                </div>
+
+                <div>
+                  <label className="text-xs font-bold text-stone-700 uppercase">
+                    Jam Lapor (WIB)
+                  </label>
+                  <input
+                    type="text"
+                    value={presWaktu}
+                    onChange={(e) => setPresWaktu(e.target.value)}
+                    placeholder="Contoh: 08:30"
+                    className="w-full mt-1 border border-stone-200 focus:border-orange-600 outline-none rounded-xl px-3.5 py-2 text-xs font-mono"
+                  />
+                </div>
+
+                {presStatus === "izin" && (
+                  <>
+                    <div>
+                      <label className="text-xs font-bold text-stone-700 uppercase">
+                        Kategori Izin
+                      </label>
+                      <input
+                        type="text"
+                        value={presJenisIzin}
+                        onChange={(e) => setPresJenisIzin(e.target.value)}
+                        placeholder="Sakit / Akademik / Lainnya"
+                        className="w-full mt-1 border border-stone-200 focus:border-orange-600 outline-none rounded-xl px-3.5 py-2 text-xs"
+                      />
+                    </div>
+                    <div>
+                      <label className="text-xs font-bold text-stone-700 uppercase">
+                        Alasan Izin
+                      </label>
+                      <input
+                        type="text"
+                        value={presAlasanIzin}
+                        onChange={(e) => setPresAlasanIzin(e.target.value)}
+                        placeholder="Keterangan izin..."
+                        className="w-full mt-1 border border-stone-200 focus:border-orange-600 outline-none rounded-xl px-3.5 py-2 text-xs"
+                      />
+                    </div>
+                  </>
+                )}
+              </div>
+
+              <div className="flex gap-2 pt-2">
+                <button
+                  type="button"
+                  onClick={() => setShowPresensiModal(false)}
+                  className="flex-1 bg-stone-100 hover:bg-stone-200 text-stone-700 font-bold py-2.5 rounded-xl text-xs transition"
+                >
+                  Batal
+                </button>
+                <button
+                  type="submit"
+                  disabled={savingPresensi}
+                  className="flex-1 bg-orange-800 hover:bg-orange-900 disabled:bg-stone-300 text-white font-bold py-2.5 rounded-xl text-xs transition"
+                >
+                  {savingPresensi ? "Menyimpan..." : "Simpan Kehadiran"}
                 </button>
               </div>
             </form>
